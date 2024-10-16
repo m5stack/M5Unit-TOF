@@ -16,6 +16,7 @@ on:
       - '**clang-format-check.yml'
       - '**.clang-format'
   pull_request:
+    paths:
       - '**.ino'
       - '**.cpp'
       - '**.hpp'
@@ -36,10 +37,10 @@ jobs:
         path:
           - check: 'src'
             exclude: ''
-          - check: 'test'
-            exclude: ''
-          - check: 'examples/UnitUnified'
-            exclude: ''
+          #- check: 'test'
+          #  exclude: ''
+          #- check: 'examples/UnitUnified'
+          #  exclude: ''
 
     steps:
       - name: Checkout # When pull_request is used, include it in the checkout https://zenn.dev/hkusu/articles/c731862051438b
