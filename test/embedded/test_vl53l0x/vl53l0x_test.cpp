@@ -78,8 +78,7 @@ TEST_P(TestVL53L0X, SignalRateLimitAndReset)
 
     EXPECT_TRUE(unit->softReset());
     EXPECT_TRUE(unit->readSignalRateLimit(tmp));
-    EXPECT_NEAR(tmp, 0.25f, 0.0075f); // default
-
+    EXPECT_NEAR(tmp, 0.25f, 0.0075f);  // default
 }
 
 TEST_P(TestVL53L0X, Singleshot)

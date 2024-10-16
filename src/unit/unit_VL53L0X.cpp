@@ -55,12 +55,12 @@ constexpr uint8_t pre_msrc_timeout_macrop_tabke[]   = {0x2B, 0x25, 0x20, 0x1C};
 struct final_values_t {
     uint8_t phase_hi, phase_low, vcsel, phassecal_timout, phasecal_limit;
 };
-constexpr final_values_t final_values_table[]              = {{0x10, 0x08, 0x02, 0x0C, 0x30},
-                                                              {0x28, 0x08, 0x03, 0x09, 0x20},
-                                                              {0x38, 0x08, 0x03, 0x08, 0x20},
-                                                              {0x48, 0x08, 0x03, 0x07, 0x20}
 
-};
+constexpr final_values_t final_values_table[] = {{0x10, 0x08, 0x02, 0x0C, 0x30},
+                                                 {0x28, 0x08, 0x03, 0x09, 0x20},
+                                                 {0x38, 0x08, 0x03, 0x08, 0x20},
+                                                 {0x48, 0x08, 0x03, 0x07, 0x20}};
+
 constexpr uint16_t pre_and_final_timeout_macop_table[4][4] = {{0x02B0, 0x0296, 0x0284, 0x01EF},
                                                               {0x02AA, 0x028F, 0x01FE, 0x01E3},
                                                               {0x02A6, 0x028B, 0x01F2, 0x01D9},
@@ -306,7 +306,6 @@ bool UnitVL53L0X::writeSignalRateLimit(const float mcps)
 
 bool UnitVL53L0X::writeMode(const vl53l0x::Mode mode)
 {
-
     /*
     if (_mode == mode) {
         return true;
@@ -433,7 +432,7 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
 bool UnitVL53L0X::softReset()
 {
     if (soft_reset()) {
-        _mode = Mode::Unknown;
+        _mode     = Mode::Unknown;
         _periodic = false;
         return begin();
     }
