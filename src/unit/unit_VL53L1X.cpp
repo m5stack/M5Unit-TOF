@@ -298,6 +298,7 @@ bool UnitVL53L1X::measureSingleshot(vl53l1x::Data& d)
 bool UnitVL53L1X::softReset()
 {
     if (soft_reset()) {
+        _distance = Distance::Unknown;
         _periodic = false;
         return begin();
     }
