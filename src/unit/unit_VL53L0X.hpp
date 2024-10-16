@@ -18,7 +18,6 @@
 
 namespace m5 {
 namespace unit {
-
 namespace vl53l0x {
 /*!
   @enum Operating
@@ -61,13 +60,9 @@ enum class RangeStatus : uint8_t {
  */
 struct Data {
     std::array<uint8_t, 12> raw{};  //!< RAW data
-    /*!
-      @brief Range status
-     */
+    //! @brief Range status
     RangeStatus range_status() const;
-    /*!
-      @brief Is data valid?
-     */
+    //! @brief Is data valid?
     inline bool valid() const
     {
         return ((raw[0] & 0x78) >> 3) == 11;
@@ -101,8 +96,8 @@ public:
         //! Operatiing condition
         vl53l0x::Operating operating{vl53l0x::Operating::Condition2V8};
         //! Operation mode
-        //vl53l0x::Mode mode{vl53l0x::Mode::LongRange};
-                                vl53l0x::Mode mode{vl53l0x::Mode::Default};
+        // vl53l0x::Mode mode{vl53l0x::Mode::LongRange};
+        vl53l0x::Mode mode{vl53l0x::Mode::Default};
         //! Start periodic measurement on begin?
         bool start_periodic{true};
     };
@@ -251,7 +246,7 @@ public:
     */
     bool changeI2CAddress(const uint8_t i2c_address);
     ///@}
-    
+
 protected:
     bool start_periodic_measurement();
     inline bool start_periodic_measurement(const vl53l0x::Mode mode)
@@ -317,6 +312,7 @@ constexpr uint8_t ALGO_PHASECAL_LIM                             {0x30};
 // clang-format on
 }  // namespace command
 }  // namespace vl53l0x
+///@endcond
 
 }  // namespace unit
 }  // namespace m5

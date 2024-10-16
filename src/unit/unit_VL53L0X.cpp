@@ -433,6 +433,7 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
 bool UnitVL53L0X::softReset()
 {
     if (soft_reset()) {
+        _mode = Mode::Unknown;
         _periodic = false;
         return begin();
     }
