@@ -72,7 +72,7 @@ void loop()
             default:
                 break;
         }
-    } else if (M5.BtnA.wasHold()) { // Reset
+    } else if (M5.BtnA.wasHold()) {  // Reset
         auto ret = unit.softReset();
         M5_LOGI("Reset:%s", ret ? "OK" : "NG");
     }
