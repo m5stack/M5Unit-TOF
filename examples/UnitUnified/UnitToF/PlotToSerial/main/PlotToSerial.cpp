@@ -50,35 +50,10 @@ void loop()
     }
 
     // Behavior when BtnA is clicked changes depending on the value.
-    constexpr int32_t BTN_A_FUNCTION{0};
+    constexpr int32_t BTN_A_FUNCTION{-1};
 
     if (M5.BtnA.wasClicked()) {
         switch (BTN_A_FUNCTION) {
-            case 2: {
-                m5::unit::vl53l0x::Data d{};
-                if (unit.measureSingleshot(d)) {
-                    M5_LOGI("\nSingleshort: >Range:%d\nStatus:%u", d.range(), d.range_status());
-                } else {
-                    M5_LOGE("Failed to measure");
-                }
-
-            } break;
-
-            case 1: {
-                static bool p{};
-                p        = !p;
-                auto ret = p ? unit.startPeriodicMeasurement() : unit.stopPeriodicMeasurement();
-                M5_LOGI("%s:%s", p ? "start" : "stop", ret ? "OK" : "NG");
-                if (!p) {
-                    m5::unit::vl53l0x::Data d{};
-                    if (unit.measureSingleshot(d)) {
-                        M5_LOGI("\nSingleshort: >Range:%d\nStatus:%u", d.range(), d.range_status());
-                    } else {
-                        M5_LOGE("Failed to measure");
-                    }
-                }
-            } break;
-
             case 0: {  // Singleshot
                 static uint32_t sscnt{};
                 unit.stopPeriodicMeasurement();
@@ -97,7 +72,7 @@ void loop()
             default:
                 break;
         }
-    } else if (M5.BtnA.wasHold()) {
+    } else if (M5.BtnA.wasHold()) { // Reset
         auto ret = unit.softReset();
         M5_LOGI("Reset:%s", ret ? "OK" : "NG");
     }
