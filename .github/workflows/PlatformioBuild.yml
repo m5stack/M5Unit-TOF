@@ -2,6 +2,10 @@ name: PlatformIOBuild
 
 on:
   push:
+    tags-ignore:
+      - '*.*.*'
+    branches:
+      - '*'
     paths:
       - 'src/unit/**.cpp'
       - 'src/unit/**.hpp'
@@ -52,27 +56,27 @@ jobs:
 
         unit:
           - UnitToF
-#          - UnitToF4M
+          - UnitToF4M
 
         board:
-#          - Core
-#          - Core2
-#          - CoreS3
-#          - StampS3
-#          - AtomS3
-#          - Dial
+          - Core
+          - Core2
+          - CoreS3
+          - StampS3
+          - AtomS3
+          - Dial
           - NanoC6
-#          - StickCPlus
-#          - Paper
-#          - Fire
+          - StickCPlus
+          - Paper
+          - Fire
 
         framework:
           - Arduino
 
         espressif32:
           - latest
-#          - '5_4_0'
-#          - '4_4_0'
+          - '5_4_0'
+          - '4_4_0'
 
         exclude:
           - board: CoreS3
