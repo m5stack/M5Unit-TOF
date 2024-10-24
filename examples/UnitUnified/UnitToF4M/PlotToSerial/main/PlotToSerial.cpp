@@ -8,7 +8,7 @@
 */
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
-#include <M5UnitUnifiedToF.h>
+#include <M5UnitUnifiedTOF.h>
 #include <M5Utility.h>
 
 namespace {

@@ -434,7 +434,7 @@ bool UnitVL53L0X::softReset()
     if (soft_reset()) {
         _mode     = Mode::Unknown;
         _periodic = false;
-        return begin();
+        return true;
     }
     return false;
 }

@@ -7,8 +7,8 @@
   @file M5UnitUnifiedToF.hpp
   @brief Main header of M5UnitToF
 
-  @mainpage M5UnitToF
-  Library for UnitToF using M5UnitUnified.
+  @mainpage M5Unit-TOF
+  Library for UnitTOF using M5UnitUnified.
 */
 #ifndef M5_UNIT_UNIFIED_TOF_HPP
 #define M5_UNIT_UNIFIED_TOF_HPP

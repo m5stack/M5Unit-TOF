@@ -218,6 +218,7 @@ TEST_P(TestVL53L1X, Reset)
     Timing tb{};
     int16_t offset{};
     uint16_t xtalk{}, ms{};
+    EXPECT_FALSE(unit->inPeriodic());
     EXPECT_TRUE(unit->readDistanceMode(d));
     EXPECT_TRUE(unit->readTimingBudget(tb));
     EXPECT_TRUE(unit->readInterMeasurementPeriod(ms));
@@ -259,13 +260,13 @@ TEST_P(TestVL53L1X, SingleShot)
 {
     SCOPED_TRACE(ustr);
 
-    Data d{};
+    Data data{};
 
-    EXPECT_FALSE(unit->measureSingleshot(d));
+    EXPECT_FALSE(unit->measureSingleshot(data));
     EXPECT_TRUE(unit->stopPeriodicMeasurement());
     EXPECT_FALSE(unit->inPeriodic());
 
-    for (auto&& d ::distance_table) {
+    for (auto&& d : distance_table) {
         std::vector<uint16_t> results;
         SCOPED_TRACE(d == Distance::Long ? "Long" : "Short");
 
@@ -273,8 +274,8 @@ TEST_P(TestVL53L1X, SingleShot)
 
         uint32_t cnt{32};
         while (cnt--) {
-            EXPECT_TRUE(unit->measureSingleshot(d));
-            results.push_back(d.range());
+            EXPECT_TRUE(unit->measureSingleshot(data));
+            results.push_back(data.range());
         }
 
         EXPECT_FALSE(results.empty());

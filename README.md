@@ -1,4 +1,4 @@
-# M5Unit - ToF
+# M5Unit - TOF
 
 ## Overview
 
@@ -36,14 +36,14 @@ See also examples using conventional methods here.
 
 ## License
 
-- [M5Unit-ToF- MIT](LICENSE)
+- [M5Unit-TOF- MIT](LICENSE)
 
 
 ## Examples
 See also [examples/UnitUnified](examples/UnitUnified)
 
 ## Doxygen document
-[GitHub Pages](https://m5stack.github.io/M5Unit-ToF/)
+[GitHub Pages](https://m5stack.github.io/M5Unit-TOF/)
 
 If you want to generate documents on your local machine, execute the following command
 

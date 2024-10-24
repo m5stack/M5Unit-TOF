@@ -96,8 +96,7 @@ public:
         //! Operatiing condition
         vl53l0x::Operating operating{vl53l0x::Operating::Condition2V8};
         //! Operation mode
-        // vl53l0x::Mode mode{vl53l0x::Mode::LongRange};
-        vl53l0x::Mode mode{vl53l0x::Mode::Default};
+        vl53l0x::Mode mode{vl53l0x::Mode::LongRange};
         //! Start periodic measurement on begin?
         bool start_periodic{true};
     };
