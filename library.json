@@ -1,6 +1,6 @@
 {
     "name": "M5Unit-ToF",
-    "description": "Library for M5Stack UNIT ToFR using M5UnitUnified",
+    "description": "Library for M5Stack UNIT TOF using M5UnitUnified",
     "keywords": "M5Stack",
     "authors": {
         "name": "M5Stack",
@@ -8,7 +8,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/m5stack/M5Unit-ToF.git"
+        "url": "https://github.com/m5stack/M5Unit-TOF.git"
     },
     "dependencies": {
         "M5UnitUnified": "https://github.com/m5stack/M5UnitUnified.git"
@@ -20,7 +20,7 @@
     "platforms": [
         "espressif32"
     ],
-    "headers": "M5_ToF4M.h, M5UnitUnifiedToF.h",
+    "headers": "M5UnitUnifiedTOF.h",
     "license": "MIT",
     "export": {
         "exclude": [
