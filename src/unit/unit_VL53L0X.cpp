@@ -373,7 +373,6 @@ bool UnitVL53L0X::perform_single_ref_calibration(const bool VHV)
     }
 
     auto timeout_at = m5::utility::millis() + 5000;
-    bool done{};
     uint8_t v{};
     while (!readRegister8(RESULT_INTERRUPT_STATUS, v, 0) || (v & 0x07) == 0) {
         if (m5::utility::millis() > timeout_at) {
