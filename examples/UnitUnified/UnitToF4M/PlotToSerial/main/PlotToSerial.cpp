@@ -86,7 +86,6 @@ void loop()
                 }
             } break;
             case 1: {  // Change window mode
-                Window w{};
                 M5_LOGW("Window:%u", w_table[idx]);
                 unit.writeDistanceThreshold(w_table[idx], 200 /*20cm*/, 400 /*40cm*/);
                 if (++idx >= m5::stl::size(w_table)) {
