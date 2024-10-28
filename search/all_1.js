@@ -1,0 +1,13 @@
+var searchData=
+[
+  ['calibrate_5foffset_0',['calibrate_offset',['../structm5_1_1unit_1_1_unit_v_l53_l1_x_1_1config__t.html#a4814ede85bd53264dab80920108c1110',1,'m5::unit::UnitVL53L1X::config_t']]],
+  ['calibrate_5fxtalk_1',['calibrate_xtalk',['../structm5_1_1unit_1_1_unit_v_l53_l1_x_1_1config__t.html#a0516ccd88dbbb967bded033171d8f8b5',1,'m5::unit::UnitVL53L1X::config_t']]],
+  ['calibrateoffset_2',['calibrateOffset',['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a98574594d768c9819012bf8ad0532249',1,'m5::unit::UnitVL53L1X']]],
+  ['calibratextalk_3',['calibrateXtalk',['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#aaf38054ca0d655da3bdfd6d0d6a04b3c',1,'m5::unit::UnitVL53L1X']]],
+  ['changei2caddress_4',['changeI2CAddress',['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#addf2fc09d94ef585055a3a9a14d2de6b',1,'m5::unit::UnitVL53L0X::changeI2CAddress()'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a97d4bf5034cc609e98f601f28a75d41e',1,'m5::unit::UnitVL53L1X::changeI2CAddress(const uint8_t i2c_address)']]],
+  ['cleardistancethreshold_5',['clearDistanceThreshold',['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a0a3c461c1d921a12487e7cf0f1296b5b',1,'m5::unit::UnitVL53L1X']]],
+  ['condition2v8_6',['Condition2V8',['../unit___v_l53_l0_x_8hpp.html#a01313f151fb9f6f3e089130dfe2b4b1dac4665649ad6786f56ae43346ba0e1fe9',1,'Condition2V8m5::unit::vl53l0x'],['../unit___v_l53_l1_x_8hpp.html#ab9432fa40f943b466f98f1c303e10f26ac4665649ad6786f56ae43346ba0e1fe9',1,'Condition2V8m5::unit::vl53l1x']]],
+  ['conditionstandard_7',['ConditionStandard',['../unit___v_l53_l0_x_8hpp.html#a01313f151fb9f6f3e089130dfe2b4b1da2f6fc23907d417233938c7b99ef282d2',1,'ConditionStandardm5::unit::vl53l0x'],['../unit___v_l53_l1_x_8hpp.html#ab9432fa40f943b466f98f1c303e10f26a2f6fc23907d417233938c7b99ef282d2',1,'ConditionStandardm5::unit::vl53l1x']]],
+  ['config_8',['config',['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#ac7a642dfd1543fc844f74045463b6644',1,'m5::unit::UnitVL53L0X::config() const'],['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#a3efc2f4e31a207bf0ed0cf879ea221a7',1,'m5::unit::UnitVL53L0X::config(const config_t &amp;cfg)'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#ae3cc788570c22eab1fe660a9de29a91a',1,'m5::unit::UnitVL53L1X::config() const'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#aa6dd9875d3ea966006948d72e2725fde',1,'m5::unit::UnitVL53L1X::config(const config_t &amp;cfg)']]],
+  ['config_5ft_9',['config_t',['../structm5_1_1unit_1_1_unit_v_l53_l0_x_1_1config__t.html',1,'m5::unit::UnitVL53L0X::config_t'],['../structm5_1_1unit_1_1_unit_v_l53_l1_x_1_1config__t.html',1,'m5::unit::UnitVL53L1X::config_t']]]
+];

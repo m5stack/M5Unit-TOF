@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['softreset_0',['softReset',['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#a2e045f270921cc9d31e93195ebc04d1d',1,'m5::unit::UnitVL53L0X::softReset()'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#ad88ce2ffeccf5c579eb568ad37f40922',1,'m5::unit::UnitVL53L1X::softReset()']]],
+  ['startperiodicmeasurement_1',['startPeriodicMeasurement',['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#a132bbbf2b8970e1e06e9a7fab4339836',1,'m5::unit::UnitVL53L0X::startPeriodicMeasurement()'],['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#ac922e50d2c6816b0aee8f7310ec5e833',1,'m5::unit::UnitVL53L0X::startPeriodicMeasurement(const vl53l0x::Mode mode)'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a1a79fa0f5ba1bb78142ba0e58408695b',1,'m5::unit::UnitVL53L1X::startPeriodicMeasurement()'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a7590983e42fbe1cfb4ee73223fc37229',1,'m5::unit::UnitVL53L1X::startPeriodicMeasurement(const vl53l1x::Distance dist, const vl53l1x::Timing tb=vl53l1x::Timing::Budget50ms)']]],
+  ['stopperiodicmeasurement_2',['stopPeriodicMeasurement',['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#a3f2983a1b3647dbb2371781103256903',1,'m5::unit::UnitVL53L0X::stopPeriodicMeasurement()'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#ae222e1f9578b06def07d43789d1b8c80',1,'m5::unit::UnitVL53L1X::stopPeriodicMeasurement()']]]
+];
