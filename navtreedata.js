@@ -24,8 +24,7 @@
 */
 var NAVTREE =
 [
-  [ "M5Unit-ToF4M", "index.html", [
-    [ "M5Unit-TOF", "index.html", null ],
+  [ "M5Unit-TOF", "index.html", [
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ]
     ] ],
