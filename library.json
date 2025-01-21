@@ -11,7 +11,7 @@
         "url": "https://github.com/m5stack/M5Unit-TOF.git"
     },
     "dependencies": {
-        "M5UnitUnified": "https://github.com/m5stack/M5UnitUnified.git"
+        "M5UnitUnified": "https://github.com/m5stack/M5UnitUnified.git@^0.0.5"
     },
     "version": "0.0.1",
     "frameworks": [
