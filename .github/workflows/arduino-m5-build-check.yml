@@ -99,6 +99,23 @@ jobs:
         archi:
           - esp32
 
+        include:
+          # Specific sketches for m5stack-core-esp32 only
+          - sketch: SimpleDisplay
+            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+            platform-version: 2.1.2
+            platform: m5stack
+            archi: esp32
+            board: m5stack_core
+            unit: UnitToF
+          - sketch: SimpleDisplay
+            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+            platform-version: 2.1.2
+            platform: m5stack
+            archi: esp32
+            board: m5stack_core
+            unit: UnitToF4M
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4

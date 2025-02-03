@@ -113,6 +113,20 @@ jobs:
 #          - board: Paper
 #            espressif32: '4_4_0'
 
+
+        include:
+          # Specific sketches for m5stack-core-esp32 only
+          - example: SimpleDisplay
+            unit: UnitToF
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: SimpleDisplay
+            unit: UnitToF4M
+            board: Core
+            framework: Arduino
+            espressif32: latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
