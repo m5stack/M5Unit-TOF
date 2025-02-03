@@ -275,40 +275,34 @@ protected:
 ///@cond
 namespace vl53l0x {
 namespace command {
-// My guess is that VL53L0X is a banked register configuration
-// clang-format off
-//Bnak 0?
-constexpr uint8_t SYSTEM_RANGE_START                            {0x00};
-constexpr uint8_t SYSTEM_SEQUENCE_CONFIG                        {0x01};
-constexpr uint8_t SYSTEM_INTERMEASUREMENT_PERIOD                {0x04};
-constexpr uint8_t SYSTEM_INTERRUPT_CONFIG_GPIO                  {0x0A};
-constexpr uint8_t SYSTEM_INTERRUPT_CLEAR                        {0x0B};
-constexpr uint8_t RESULT_INTERRUPT_STATUS                       {0x13};
-constexpr uint8_t RESULT_RANGE_STATUS                           {0x14};
-constexpr uint8_t RESULT_RANGE_STATUS_RESULT                    {0x1E};
-constexpr uint8_t ALGO_PHASECAL_CONFIG_TIMEOUT                  {0x30};
-constexpr uint8_t GLOBAL_CONFIG_VCSEL_WIDTH                     {0x32};
-constexpr uint8_t FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT   {0x44};
-constexpr uint8_t MSRC_CONFIG_TIMEOUT_MACROP                    {0x46};
-constexpr uint8_t FINAL_RANGE_CONFIG_VALID_PHASE_LOW            {0x47};
-constexpr uint8_t FINAL_RANGE_CONFIG_VALID_PHASE_HIGH           {0x48};
-constexpr uint8_t PRE_RANGE_CONFIG_VCSEL_PERIOD                 {0x50};
-constexpr uint8_t PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI            {0x51};
-constexpr uint8_t PRE_RANGE_CONFIG_VALID_PHASE_LOW              {0x56};
-constexpr uint8_t PRE_RANGE_CONFIG_VALID_PHASE_HIGH             {0x57};
-constexpr uint8_t MSRC_CONFIG_CONTROL                           {0x60};
+constexpr uint8_t SYSTEM_RANGE_START{0x00};
+constexpr uint8_t SYSTEM_SEQUENCE_CONFIG{0x01};
+constexpr uint8_t SYSTEM_INTERMEASUREMENT_PERIOD{0x04};
+constexpr uint8_t SYSTEM_INTERRUPT_CONFIG_GPIO{0x0A};
+constexpr uint8_t SYSTEM_INTERRUPT_CLEAR{0x0B};
+constexpr uint8_t RESULT_INTERRUPT_STATUS{0x13};
+constexpr uint8_t RESULT_RANGE_STATUS{0x14};
+constexpr uint8_t RESULT_RANGE_STATUS_RESULT{0x1E};
+constexpr uint8_t ALGO_PHASECAL_CONFIG_TIMEOUT{0x30};
+constexpr uint8_t GLOBAL_CONFIG_VCSEL_WIDTH{0x32};
+constexpr uint8_t FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT{0x44};
+constexpr uint8_t MSRC_CONFIG_TIMEOUT_MACROP{0x46};
+constexpr uint8_t FINAL_RANGE_CONFIG_VALID_PHASE_LOW{0x47};
+constexpr uint8_t FINAL_RANGE_CONFIG_VALID_PHASE_HIGH{0x48};
+constexpr uint8_t PRE_RANGE_CONFIG_VCSEL_PERIOD{0x50};
+constexpr uint8_t PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI{0x51};
+constexpr uint8_t PRE_RANGE_CONFIG_VALID_PHASE_LOW{0x56};
+constexpr uint8_t PRE_RANGE_CONFIG_VALID_PHASE_HIGH{0x57};
+constexpr uint8_t MSRC_CONFIG_CONTROL{0x60};
 
-constexpr uint8_t FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI          {0x71};
-constexpr uint8_t GPIO_HV_MUX_ACTIVE_HIGH                       {0x84};
-constexpr uint8_t I2C_SLAVE_DEVICE_ADDRESS                      {0x8A};
-constexpr uint8_t VHV_CONFIG_PAD_SCL_SDA_EXTSUP_HV              {0x89};
-constexpr uint8_t SOFT_RESET                                    {0xBF};
-constexpr uint8_t MODEL_ID                                      {0xC0};
+constexpr uint8_t FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI{0x71};
+constexpr uint8_t GPIO_HV_MUX_ACTIVE_HIGH{0x84};
+constexpr uint8_t I2C_SLAVE_DEVICE_ADDRESS{0x8A};
+constexpr uint8_t VHV_CONFIG_PAD_SCL_SDA_EXTSUP_HV{0x89};
+constexpr uint8_t SOFT_RESET{0xBF};
+constexpr uint8_t MODEL_ID{0xC0};
 
-// Bank 1?
-constexpr uint8_t ALGO_PHASECAL_LIM                             {0x30};
-
-// clang-format on
+constexpr uint8_t ALGO_PHASECAL_LIM{0x30};
 }  // namespace command
 }  // namespace vl53l0x
 ///@endcond

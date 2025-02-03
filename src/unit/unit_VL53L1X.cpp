@@ -398,16 +398,16 @@ bool UnitVL53L1X::writeDistanceMode(const Distance d)
                       writeRegister8(RANGE_CONFIG_VCSEL_PERIOD_A, 0x07) &&
                       writeRegister8(RANGE_CONFIG_VCSEL_PERIOD_B, 0x05) &&
                       writeRegister8(RANGE_CONFIG_VALID_PHASE_HIGH, 0x38) &&
-                      writeRegister16(SD_CONFIG_WOI_SD0, 0x0705) &&
-                      writeRegister16(SD_CONFIG_INITIAL_PHASE_SD0, 0x0606);
+                      writeRegister16BE(SD_CONFIG_WOI_SD0, 0x0705) &&
+                      writeRegister16BE(SD_CONFIG_INITIAL_PHASE_SD0, 0x0606);
                 break;
             case Distance::Long:
                 ret = writeRegister8(PHASECAL_CONFIG_TIMEOUT_MACROP, 0x0A) &&
                       writeRegister8(RANGE_CONFIG_VCSEL_PERIOD_A, 0x0F) &&
                       writeRegister8(RANGE_CONFIG_VCSEL_PERIOD_B, 0x0D) &&
                       writeRegister8(RANGE_CONFIG_VALID_PHASE_HIGH, 0xB8) &&
-                      writeRegister16(SD_CONFIG_WOI_SD0, 0x0F0D) &&
-                      writeRegister16(SD_CONFIG_INITIAL_PHASE_SD0, 0x0E0E);
+                      writeRegister16BE(SD_CONFIG_WOI_SD0, 0x0F0D) &&
+                      writeRegister16BE(SD_CONFIG_INITIAL_PHASE_SD0, 0x0E0E);
                 break;
             default:
                 break;
@@ -441,7 +441,7 @@ bool UnitVL53L1X::calibrateOffset(int16_t& offset, const uint16_t targetmm)
             } while (!ready && m5::utility::millis() <= timeout_at);
             if (ready) {
                 uint16_t distance{};
-                if (readRegister16(RESULT_FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0, distance, 0)) {
+                if (readRegister16BE(RESULT_FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0, distance, 0)) {
                     avg += distance;
                     ++avg_count;
                 }
@@ -463,7 +463,7 @@ bool UnitVL53L1X::calibrateOffset(int16_t& offset, const uint16_t targetmm)
 bool UnitVL53L1X::readOffset(int16_t& offset)
 {
     uint16_t v{};
-    if (readRegister16(ALGO_PART_TO_PART_RANGE_OFFSET_MM, v, 0)) {
+    if (readRegister16BE(ALGO_PART_TO_PART_RANGE_OFFSET_MM, v, 0)) {
         // 11.2 to int16
         v >>= 2;
         if (v & 0x0400) {  // Sign extension
@@ -485,7 +485,7 @@ bool UnitVL53L1X::writeOffset(const int16_t offset)
         return false;
     }
     tmp = (tmp << 2) & 0x1FFF;  // int16 to 11.2
-    return writeRegister16(ALGO_PART_TO_PART_RANGE_OFFSET_MM, tmp);
+    return writeRegister16BE(ALGO_PART_TO_PART_RANGE_OFFSET_MM, tmp);
 }
 
 bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
@@ -506,15 +506,15 @@ bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
             } while (!ready && m5::utility::millis() <= timeout_at);
             if (ready) {
                 uint16_t distance{}, sr{}, spad_nb{};
-                if (readRegister16(RESULT_FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0, distance, 0)) {
+                if (readRegister16BE(RESULT_FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0, distance, 0)) {
                     avg += distance;
                     ++avg_count;
                 }
-                if (readRegister16(RESULT_PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0, sr, 0)) {
+                if (readRegister16BE(RESULT_PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0, sr, 0)) {
                     avg_signal_rate += sr;
                     ++avg_signal_rate_count;
                 }
-                if (readRegister16(RESULT_DSS_ACTUAL_EFFECTIVE_SPADS_SD0, spad_nb, 0)) {
+                if (readRegister16BE(RESULT_DSS_ACTUAL_EFFECTIVE_SPADS_SD0, spad_nb, 0)) {
                     avg_spad += spad_nb;
                     ++avg_spad_count;
                 }
@@ -560,7 +560,7 @@ bool UnitVL53L1X::readXtalk(uint16_t& xtalk)
 {
     xtalk = 0;
     uint16_t v{};
-    if (readRegister16(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, v, 0)) {
+    if (readRegister16BE(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, v, 0)) {
         uint32_t t = v;
         xtalk      = (t * 1000 + 0x1FF) >> 9;  // ceiled
         return true;
@@ -570,10 +570,10 @@ bool UnitVL53L1X::readXtalk(uint16_t& xtalk)
 
 bool UnitVL53L1X::writeXtalk(const uint16_t xtalk)
 {
-    return writeRegister16(ALGO_CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS, 0x0000) &&
-           writeRegister16(ALGO_CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS, 0x0000) &&
+    return writeRegister16BE(ALGO_CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS, 0x0000) &&
+           writeRegister16BE(ALGO_CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS, 0x0000) &&
            // convert to kiro cps by fixed 7.9
-           writeRegister16(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, (xtalk << 9) / 1000);
+           writeRegister16BE(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, (xtalk << 9) / 1000);
 }
 
 bool UnitVL53L1X::readTimingBudget(vl53l1x::Timing& tb)
@@ -581,7 +581,7 @@ bool UnitVL53L1X::readTimingBudget(vl53l1x::Timing& tb)
     tb = Timing::BudgetUnknown;
 
     uint16_t v{};
-    if (readRegister16(RANGE_CONFIG_TIMEOUT_MACROP_A, v, 0)) {
+    if (readRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_A, v, 0)) {
         switch (v) {
             case 0x001D:
                 tb = Timing::Budget15ms;
@@ -629,10 +629,10 @@ bool UnitVL53L1X::write_timing_budget(const Timing tb, const Distance dist)
         return false;
     }
 
-    if (writeRegister16(RANGE_CONFIG_TIMEOUT_MACROP_A_HI,
-                        tb_table[m5::stl::to_underlying(_distance)][m5::stl::to_underlying(tb)][0]) &&
-        writeRegister16(RANGE_CONFIG_TIMEOUT_MACROP_B_HI,
-                        tb_table[m5::stl::to_underlying(_distance)][m5::stl::to_underlying(tb)][1])) {
+    if (writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_A_HI,
+                          tb_table[m5::stl::to_underlying(_distance)][m5::stl::to_underlying(tb)][0]) &&
+        writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_B_HI,
+                          tb_table[m5::stl::to_underlying(_distance)][m5::stl::to_underlying(tb)][1])) {
         _tb = tb;
         return true;
     }
@@ -642,12 +642,10 @@ bool UnitVL53L1X::write_timing_budget(const Timing tb, const Distance dist)
 bool UnitVL53L1X::readInterMeasurementPeriod(uint16_t& ms)
 {
     ms = 0;
-    uint8_t tmp[4]{};
+    uint32_t tmp32{};
     uint16_t cpll{};
-    if (readRegister(SYSTEM_INTERMEASUREMENT_PERIOD, tmp, 4, 0) && readRegister16(RESULT_OSC_CALIBRATE_VAL, cpll, 0)) {
-        uint32_t tmp32 =
-            ((uint32_t)tmp[0] << 24) | ((uint32_t)tmp[1] << 16) | ((uint32_t)tmp[2] << 8) | ((uint32_t)tmp[3]);
-
+    if (readRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, tmp32, 0) &&
+        readRegister16BE(RESULT_OSC_CALIBRATE_VAL, cpll, 0)) {
         cpll &= 0x3FF;
         ms = (uint16_t)(tmp32 / (cpll * 1.065f) + 0.5f);
         return true;
@@ -658,17 +656,12 @@ bool UnitVL53L1X::readInterMeasurementPeriod(uint16_t& ms)
 bool UnitVL53L1X::writeInterMeasurementPeriod(const uint16_t ms)
 {
     uint16_t cpll{};
-    if (readRegister16(RESULT_OSC_CALIBRATE_VAL, cpll, 0)) {
+    if (readRegister16BE(RESULT_OSC_CALIBRATE_VAL, cpll, 0)) {
         cpll &= 0x3FF;
 
-        uint8_t tmp[4]{};
-        uint32_t v = (uint32_t)(cpll * ms * 1.065f);
-        tmp[0]     = (uint8_t)(v >> 24);
-        tmp[1]     = (uint8_t)(v >> 16);
-        tmp[2]     = (uint8_t)(v >> 8);
-        tmp[3]     = (uint8_t)(v);
+        uint32_t tmp32 = (uint32_t)(cpll * ms * 1.065f);
 
-        if (writeRegister(SYSTEM_INTERMEASUREMENT_PERIOD, tmp, 4)) {
+        if (writeRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, tmp32)) {
             _interval = ms;
             return true;
         }
@@ -692,11 +685,11 @@ bool UnitVL53L1X::readDistanceThresholdWindow(vl53l1x::Window& window)
 
 bool UnitVL53L1X::readDistanceThresholdLow(uint16_t& mm)
 {
-    return readRegister16(SYSTEM_THRESH_LOW, mm, 0);
+    return readRegister16BE(SYSTEM_THRESH_LOW, mm, 0);
 }
 bool UnitVL53L1X::readDistanceThresholdHigh(uint16_t& mm)
 {
-    return readRegister16(SYSTEM_THRESH_HIGH, mm, 0);
+    return readRegister16BE(SYSTEM_THRESH_HIGH, mm, 0);
 }
 
 bool UnitVL53L1X::writeDistanceThreshold(const vl53l1x::Window window, const uint16_t low, const uint16_t high)
@@ -713,8 +706,8 @@ bool UnitVL53L1X::writeDistanceThreshold(const vl53l1x::Window window, const uin
         } else {
             tmp = (tmp & 0x4C) | m5::stl::to_underlying(window);
         }
-        return writeRegister8(SYSTEM_INTERRUPT_CONFIG_GPIO, tmp) && writeRegister16(SYSTEM_THRESH_LOW, low) &&
-               writeRegister16(SYSTEM_THRESH_HIGH, high);
+        return writeRegister8(SYSTEM_INTERRUPT_CONFIG_GPIO, tmp) && writeRegister16BE(SYSTEM_THRESH_LOW, low) &&
+               writeRegister16BE(SYSTEM_THRESH_HIGH, high);
     }
     return false;
 }

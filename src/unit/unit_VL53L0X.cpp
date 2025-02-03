@@ -301,7 +301,7 @@ bool UnitVL53L0X::writeSignalRateLimit(const float mcps)
         return false;
     }
     uint16_t v = mcps * (1 << 7);
-    return writeRegister16(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, v);
+    return writeRegister16BE(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, v);
 }
 
 bool UnitVL53L0X::writeMode(const vl53l0x::Mode mode)
@@ -325,11 +325,11 @@ bool UnitVL53L0X::writeMode(const vl53l0x::Mode mode)
         } break;
         case Mode::HighAccuracy: {
             ret = writeSignalRateLimit(0.25f) && write_vcsel_period_range(14, 10) &&
-                  writeRegister16(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI, 0x059A);
+                  writeRegister16BE(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI, 0x059A);
         } break;
         case Mode::HighSpeed: {
             ret = writeSignalRateLimit(0.25f) && write_vcsel_period_range(14, 10) &&
-                  writeRegister16(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI, 0x00D5);
+                  writeRegister16BE(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI, 0x00D5);
         } break;
         case Mode::LongRange: {
             ret = writeSignalRateLimit(0.1f) && write_vcsel_period_range(18, 14);
@@ -338,14 +338,9 @@ bool UnitVL53L0X::writeMode(const vl53l0x::Mode mode)
             break;
     }
     if (ret) {
-        auto i = interval_table[m5::stl::to_underlying(mode)];
-        uint8_t tmp[4]{};
-        tmp[0] = i >> 24;
-        tmp[1] = i >> 16;
-        tmp[2] = i >> 8;
-        tmp[3] = i & 0xFF;
-        if (writeRegister(SYSTEM_INTERMEASUREMENT_PERIOD, tmp, 4U)) {
-            _interval = i;
+        auto it = interval_table[m5::stl::to_underlying(mode)];
+        if (writeRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, it)) {
+            _interval = it;
             _mode     = mode;
             return true;
         }
@@ -356,11 +351,11 @@ bool UnitVL53L0X::writeMode(const vl53l0x::Mode mode)
 bool UnitVL53L0X::readSignalRateLimit(float& mcps)
 {
     uint16_t v{};
-    if (readRegister16(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, v, 0)) {
+    mcps = std::numeric_limits<float>::quiet_NaN();
+    if (readRegister16BE(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, v, 0)) {
         mcps = (float)v / (1 << 7);  // 9.7 to float
         return true;
     }
-    mcps = std::numeric_limits<float>::quiet_NaN();
     return false;
 }
 
@@ -403,7 +398,7 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
     if (!writeRegister8(PRE_RANGE_CONFIG_VALID_PHASE_HIGH, pre_phase_table[pre_idx]) ||
         !writeRegister8(PRE_RANGE_CONFIG_VALID_PHASE_LOW, 0x08) ||
         !writeRegister8(PRE_RANGE_CONFIG_VCSEL_PERIOD, pre_vcsel_period) ||
-        !writeRegister16(PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI, pre_range_timeout_macrop_table[pre_idx]) ||
+        !writeRegister16BE(PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI, pre_range_timeout_macrop_table[pre_idx]) ||
         !writeRegister8(MSRC_CONFIG_TIMEOUT_MACROP, pre_msrc_timeout_macrop_tabke[pre_idx])) {
         M5_LIB_LOGE("Failed to write pre");
         return false;
@@ -418,7 +413,8 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
         !writeRegister8(0xFF_u8, 0x01) ||
         !writeRegister8(ALGO_PHASECAL_LIM, final_values_table[final_idx].phasecal_limit) ||
         !writeRegister8(0xFF_u8, 0x00) || !writeRegister8(PRE_RANGE_CONFIG_VCSEL_PERIOD, final_vcsel_period) ||
-        !writeRegister16(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI, pre_and_final_timeout_macop_table[pre_idx][final_idx])) {
+        !writeRegister16BE(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI,
+                           pre_and_final_timeout_macop_table[pre_idx][final_idx])) {
         M5_LIB_LOGE("Failed to write final");
         return false;
     }
