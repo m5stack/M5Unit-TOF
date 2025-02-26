@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 /*
-  Example using M5UnitUnified for UnitToF
+  Example using M5UnitUnified for UnitToF/ToF4M/HatToF
 */
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
@@ -14,7 +14,15 @@
 namespace {
 auto& lcd = M5.Display;
 m5::unit::UnitUnified Units;
+#if defined(USING_UNIT_TOF)
 m5::unit::UnitToF unit;
+#elif defined(USING_UNIT_TOF4M)
+m5::unit::UnitToF4M unit;
+#elif defined(USING_HAT_TOF)
+m5::unit::HatToF unit;
+#else
+#error Choose unit please!
+#endif
 int16_t lastRange{};
 }  // namespace
 
@@ -26,9 +34,13 @@ void setup()
         lcd.setRotation(1);
     }
 
+#if defined(USING_HAT_TOF)
+    Wire.begin(0, 26, 400 * 1000U);
+#else
     auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
     auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
     Wire.begin(pin_num_sda, pin_num_scl, 400 * 1000U);
+#endif
 
     if (!Units.add(unit, Wire) || !Units.begin()) {
         M5_LOGE("Failed to begin");
@@ -58,7 +70,7 @@ void loop()
 
     if (unit.updated()) {
         auto range = unit.range();
-        if (range > 0 && range != lastRange) {
+        if (range >= 0 && range != lastRange) {
             lcd.fillRect(0, lcd.height() / 2 - lcd.fontHeight() / 2, lcd.width(), lcd.fontHeight(), TFT_BLACK);
             lcd.drawString(m5::utility::formatString("%d", range).c_str(), lcd.width() / 2, lcd.height() / 2);
             lastRange = range;
