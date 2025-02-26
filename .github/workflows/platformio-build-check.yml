@@ -21,7 +21,7 @@ on:
       - 'examples/UnitUnified/**.hpp'
       - 'examples/UnitUnified/**.h'
       - 'examples/UnitUnified/**.c'
-      - '/platformio-build-check.yml'
+      - '**platformio-build-check.yml'
       - '**platformio.ini'
   pull_request:
     paths:
@@ -38,7 +38,7 @@ on:
       - 'examples/UnitUnified/**.hpp'
       - 'examples/UnitUnified/**.h'
       - 'examples/UnitUnified/**.c'
-      - '**/platformio-build-check.yml'
+      - '**platformio-build-check.yml'
       - '**platformio.ini'
   workflow_dispatch:
 
@@ -115,7 +115,7 @@ jobs:
 
 
         include:
-          # Specific sketches for m5stack-core-esp32 only
+          # Specific sketches
           - example: SimpleDisplay
             unit: UnitToF
             board: Core
@@ -124,6 +124,26 @@ jobs:
           - example: SimpleDisplay
             unit: UnitToF4M
             board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: SimpleDisplay
+            unit: HatToF
+            board: StickCPlus
+            framework: Arduino
+            espressif32: latest
+          - example: SimpleDisplay
+            unit: HatToF
+            board: StickCPlus2
+            framework: Arduino
+            espressif32: latest
+          - example: DualSensor
+            unit: HatToF
+            board: StickCPlus
+            framework: Arduino
+            espressif32: latest
+          - example: DualSensor
+            unit: HatToF
+            board: StickCPlus2
             framework: Arduino
             espressif32: latest
 
