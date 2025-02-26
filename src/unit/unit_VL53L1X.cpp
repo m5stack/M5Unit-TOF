@@ -300,7 +300,7 @@ bool UnitVL53L1X::softReset()
     if (soft_reset()) {
         _distance = Distance::Unknown;
         _periodic = false;
-        return true;
+        return wait_booted() && write_default_values();
     }
     return false;
 }

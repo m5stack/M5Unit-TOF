@@ -103,26 +103,8 @@ bool UnitVL53L0X::write_default_values()
     return true;
 }
 
-bool UnitVL53L0X::begin()
+bool UnitVL53L0X::write_default_settings()
 {
-    auto ssize = stored_size();
-    assert(ssize && "stored_size must be greater than zero");
-    if (ssize != _data->capacity()) {
-        _data.reset(new m5::container::CircularBuffer<Data>(ssize));
-        if (!_data) {
-            M5_LIB_LOGE("Failed to allocate");
-            return false;
-        }
-    }
-
-    // Check unit
-    uint8_t model_id{};
-    readRegister8(MODEL_ID, model_id, 0);
-    if (model_id != VALID_MODEL_ID) {
-        M5_LIB_LOGE("This unit is NOT VL53L0X %x", model_id);
-        return false;
-    }
-
     // Operating condition
     if (!writeRegister8(VHV_CONFIG_PAD_SCL_SDA_EXTSUP_HV, (_cfg.operating == Operating::Condition2V8))) {
         M5_LIB_LOGE("Failed to write operation gcondition");
@@ -177,6 +159,32 @@ bool UnitVL53L0X::begin()
     if (!writeRegister8(SYSTEM_SEQUENCE_CONFIG,
                         RANGE_SEQUENCE_STEP_DSS | RANGE_SEQUENCE_STEP_PRE_RANGE | RANGE_SEQUENCE_STEP_FINAL_RANGE)) {
         M5_LIB_LOGE("Failed to set specific steps in the sequence");
+        return false;
+    }
+    return true;
+}
+
+bool UnitVL53L0X::begin()
+{
+    auto ssize = stored_size();
+    assert(ssize && "stored_size must be greater than zero");
+    if (ssize != _data->capacity()) {
+        _data.reset(new m5::container::CircularBuffer<Data>(ssize));
+        if (!_data) {
+            M5_LIB_LOGE("Failed to allocate");
+            return false;
+        }
+    }
+
+    // Check unit
+    uint8_t model_id{};
+    if (!readRegister8(MODEL_ID, model_id, 0) || model_id != VALID_MODEL_ID) {
+        M5_LIB_LOGE("This unit is NOT VL53L0X %x", model_id);
+        return false;
+    }
+
+    // Default settings
+    if (!write_default_settings()) {
         return false;
     }
 
@@ -249,13 +257,14 @@ bool UnitVL53L0X::measureSingleshot(vl53l0x::Data& d)
     d = {};
 
     if (inPeriodic()) {
-        M5_LIB_LOGD("Periodic measurements are running");
+        M5_LIB_LOGE("Periodic measurements are running");
         return false;
     }
 
     if (!writeRegister8(0x80_u8, 0x01) || !writeRegister8(0xFF_u8, 0x01) || !writeRegister8(0x00_u8, 0x00) ||
         !writeRegister8(0x91_u8, _stop) || !writeRegister8(0x00_u8, 0x01) || !writeRegister8(0xFF_u8, 0x00) ||
         !writeRegister8(0x80_u8, 0x00) || !writeRegister8(SYSTEM_RANGE_START, 0x01)) {
+        M5_LIB_LOGE("AAA");
         return false;
     }
 
@@ -268,19 +277,20 @@ bool UnitVL53L0X::measureSingleshot(vl53l0x::Data& d)
         done = readRegister8(SYSTEM_RANGE_START, v, 0) && ((v & 0x01) == 0);
     }
     if (!done) {
+        M5_LIB_LOGE("BBB");
         return false;
     }
 
     timeout_at = m5::utility::millis() + 1000;
-    done       = read_data_ready_status();
-    while (!done && m5::utility::millis() <= timeout_at) {
+    do {
+        if (read_data_ready_status()) {
+            return read_measurement(d) && writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01);
+        }
         m5::utility::delay(1);
-        done = read_data_ready_status();
-    }
-    if (!done) {
-        return false;
-    }
-    return read_measurement(d) && writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01);
+    } while (m5::utility::millis() <= timeout_at);
+
+    M5_LIB_LOGE("Timeout");
+    return false;
 }
 
 bool UnitVL53L0X::read_data_ready_status()
@@ -429,7 +439,7 @@ bool UnitVL53L0X::softReset()
     if (soft_reset()) {
         _mode     = Mode::Unknown;
         _periodic = false;
-        return true;
+        return write_default_settings();
     }
     return false;
 }

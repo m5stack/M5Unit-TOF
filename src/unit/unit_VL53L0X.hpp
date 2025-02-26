@@ -263,6 +263,8 @@ protected:
 
     bool soft_reset();
 
+    bool write_default_settings();
+
     M5_UNIT_COMPONENT_PERIODIC_MEASUREMENT_ADAPTER_HPP_BUILDER(UnitVL53L0X, vl53l0x::Data);
 
 protected:
