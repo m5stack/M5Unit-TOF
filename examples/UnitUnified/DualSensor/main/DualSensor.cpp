@@ -32,7 +32,7 @@ public:
 
     void push_back(const int32_t range)
     {
-        int32_t val = std::max(std::min(_max_value, range), 0);
+        int32_t val = std::max(std::min(_max_value, range), (int32_t)0);
         if (_value == val) {
             return;
         }

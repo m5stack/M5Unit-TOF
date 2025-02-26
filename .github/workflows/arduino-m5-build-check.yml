@@ -115,14 +115,14 @@ jobs:
 
         include:
           # Specific sketches
-          - sketch: ProtToSerial
+          - sketch: PlotToSerial
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
             platform-version: 2.1.2
             platform: esp32
             archi: esp32
             board: m5stack_stickc_plus
             build-properties: "-DUSING_HAT_TOF"
-          - sketch: ProtToSerial
+          - sketch: PlotToSerial
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
             platform-version: 2.1.2
             platform: esp32

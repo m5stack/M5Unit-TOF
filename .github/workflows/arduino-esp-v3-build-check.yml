@@ -116,14 +116,14 @@ jobs:
 
         include:
           # Specific sketches
-          - sketch: ProtToSerial
+          - sketch: PlotToSerial
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform-version: 3.1.3
             platform: esp32
             archi: esp32
             board: m5stack_stickc_plus
             build-properties: "-DUSING_HAT_TOF"
-          - sketch: ProtToSerial
+          - sketch: PlotToSerial
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
             platform-version: 3.1.3
             platform: esp32

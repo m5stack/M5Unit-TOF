@@ -137,12 +137,10 @@ jobs:
             framework: Arduino
             espressif32: latest
           - example: DualSensor
-            unit: HatToF
             board: StickCPlus
             framework: Arduino
             espressif32: latest
           - example: DualSensor
-            unit: HatToF
             board: StickCPlus2
             framework: Arduino
             espressif32: latest
