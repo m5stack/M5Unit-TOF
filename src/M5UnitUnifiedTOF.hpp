@@ -30,6 +30,7 @@ namespace unit {
 
 using UnitToF   = m5::unit::UnitVL53L0X;
 using UnitToF4M = m5::unit::UnitVL53L1X;
+using HatToF    = m5::unit::UnitVL53L0X;
 
 }  // namespace unit
 }  // namespace m5
