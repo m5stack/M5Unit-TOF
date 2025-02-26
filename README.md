@@ -19,6 +19,9 @@ ToF4M Unit offers exceptional accuracy, with measurements as precise as 0.1mm. T
 
 ToF4M Unit communicates using the I2C protocol, providing advantages such as simplified connectivity, support for multi-master and multi-slave topologies, and high reliability. It can be easily integrated with existing sensor buses, effectively saving IO resources. The module features a standard Grove interface, ensuring reliable and stable signal transmission. When used with the M5Stack hardware ecosystem, it supports plug-and-play functionality, enabling rapid project development.
 
+### SKU:U072
+
+ToF HAT is a high precision laser-ranging sensor specifically designed for M5StickC. Integrated with VL53L0X and 940nm VCSEL emitter. It can provide high precision and low latency performance on object distance detection. 
 
 ## Related Link
 
@@ -26,7 +29,7 @@ See also examples using conventional methods here.
 
 - [Unit ToF & Datasheet](https://docs.m5stack.com/en/unit/TOF)
 - [Unit ToF4M & Datasheet](https://docs.m5stack.com/en/unit/Unit-ToF4M)
-
+- [Hat ToF & Datasheet](https://docs.m5stack.com/en/hat/hat-tof)
 
 ## Required Libraries:
 
