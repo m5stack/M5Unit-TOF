@@ -118,41 +118,41 @@ jobs:
           - sketch: PlotToSerial
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
             platform-version: 2.1.2
-            platform: esp32
+            platform: m5stack
             archi: esp32
             board: m5stack_stickc_plus
             build-properties: "-DUSING_HAT_TOF"
           - sketch: PlotToSerial
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
             platform-version: 2.1.2
-            platform: esp32
+            platform: m5stack
             archi: esp32
             board: m5stack_stickc_plus2
             build-properties: "-DUSING_HAT_TOF"
           - sketch: SimpleDisplay
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
             platform-version: 2.1.2
-            platform: esp32
+            platform: m5stack
             archi: esp32
             board: m5stack_stickc_plus
             build-properties: "-DUSING_HAT_TOF"
           - sketch: SimpleDisplay
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
             platform-version: 2.1.2
-            platform: esp32
+            platform: m5stack
             archi: esp32
             board: m5stack_stickc_plus2
             build-properties: "-DUSING_HAT_TOF"
           - sketch: DualSensor
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
             platform-version: 2.1.2
-            platform: esp32
+            platform: m5stack
             archi: esp32
             board: m5stack_stickc_plus
           - sketch: DualSensor
             platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
             platform-version: 2.1.2
-            platform: esp32
+            platform: m5stack
             archi: esp32
             board: m5stack_stickc_plus2
 
