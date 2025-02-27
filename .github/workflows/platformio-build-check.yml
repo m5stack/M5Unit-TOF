@@ -12,16 +12,12 @@ on:
       - 'src/unit/**.hpp'
       - 'src/unit/**.h'
       - 'src/unit/**.c'
-      - 'test/**.cpp'
-      - 'test/**.hpp'
-      - 'test/**.h'
-      - 'test/**.c'
       - 'examples/UnitUnified/**.ino'
       - 'examples/UnitUnified/**.cpp'
       - 'examples/UnitUnified/**.hpp'
       - 'examples/UnitUnified/**.h'
       - 'examples/UnitUnified/**.c'
-      - '/platformio-build-check.yml'
+      - '**platformio-build-check.yml'
       - '**platformio.ini'
   pull_request:
     paths:
@@ -29,23 +25,28 @@ on:
       - 'src/unit/**.hpp'
       - 'src/unit/**.h'
       - 'src/unit/**.c'
-      - 'test/**.cpp'
-      - 'test/**.hpp'
-      - 'test/**.h'
-      - 'test/**.c'
       - 'examples/UnitUnified/**.ino'
       - 'examples/UnitUnified/**.cpp'
       - 'examples/UnitUnified/**.hpp'
       - 'examples/UnitUnified/**.h'
       - 'examples/UnitUnified/**.c'
-      - '**/platformio-build-check.yml'
+      - '**platformio-build-check.yml'
       - '**platformio.ini'
   workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     name: ${{ matrix.unit }}:${{ matrix.example }}@${{ matrix.board }}:${{ matrix.framework }}:${{ matrix.espressif32 }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     strategy:
       fail-fast: false
@@ -115,7 +116,7 @@ jobs:
 
 
         include:
-          # Specific sketches for m5stack-core-esp32 only
+          # Specific sketches
           - example: SimpleDisplay
             unit: UnitToF
             board: Core
@@ -124,6 +125,24 @@ jobs:
           - example: SimpleDisplay
             unit: UnitToF4M
             board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: SimpleDisplay
+            unit: HatToF
+            board: StickCPlus
+            framework: Arduino
+            espressif32: latest
+          - example: SimpleDisplay
+            unit: HatToF
+            board: StickCPlus2
+            framework: Arduino
+            espressif32: latest
+          - example: DualSensor
+            board: StickCPlus
+            framework: Arduino
+            espressif32: latest
+          - example: DualSensor
+            board: StickCPlus2
             framework: Arduino
             espressif32: latest
 

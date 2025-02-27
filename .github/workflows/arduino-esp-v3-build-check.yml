@@ -15,10 +15,6 @@ on:
       - 'src/unit/**.hpp'
       - 'src/unit/**.h'
       - 'src/unit/**.c'
-      - 'test/**.cpp'
-      - 'test/**.hpp'
-      - 'test/**.h'
-      - 'test/**.c'
       - 'examples/UnitUnified/**.ino'
       - 'examples/UnitUnified/**.cpp'
       - 'examples/UnitUnified/**.hpp'
@@ -31,10 +27,6 @@ on:
       - 'src/unit/**.hpp'
       - 'src/unit/**.h'
       - 'src/unit/**.c'
-      - 'test/**.cpp'
-      - 'test/**.hpp'
-      - 'test/**.h'
-      - 'test/**.c'
       - 'examples/UnitUnified/**.ino'
       - 'examples/UnitUnified/**.cpp'
       - 'examples/UnitUnified/**.hpp'
@@ -43,10 +35,19 @@ on:
       - '**arduino-esp-v3-build-check.yml'
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    name: ${{ matrix.unit }}:${{ matrix.sketch }}:${{matrix.board}}@${{matrix.platform-version}}
+    name: ${{ matrix.build-properties }}:${{ matrix.sketch }}:${{matrix.board}}@${{matrix.platform-version}}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     strategy:
       fail-fast: false
@@ -57,10 +58,12 @@ jobs:
 
         sketch:
           - PlotToSerial
+          - SimpleDisplay
 
-        unit:
-          - UnitToF
-          - UnitToF4M
+#        unit:
+#          - UnitToF
+#          - UnitToF4M
+#          - HatToF
 
         board:
           - m5stack_atom
@@ -89,7 +92,7 @@ jobs:
 #          - m5stack_unit_cams3
 
         platform-version:
-          - 3.0.4
+          - 3.1.3
 
         platform:
           - esp32
@@ -97,23 +100,63 @@ jobs:
         archi:
           - esp32
 
-        include:
-          # Specific sketches for m5stack-core-esp32 only
-          - sketch: SimpleDisplay
-            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
-            platform-version: 3.0.4
-            platform: esp32
-            archi: esp32
-            board: m5stack_core
-            unit: UnitToF
-          - sketch: SimpleDisplay
-            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
-            platform-version: 3.0.4
-            platform: esp32
-            archi: esp32
-            board: m5stack_core
-            unit: UnitToF4M
+        build-properties:
+          - "-DUSING_UNIT_TOF"
+          - "-DUSING_UNIT_TOF4M"
+#          - "-DUSING_HAT_TOF"
 
+        exclude:
+          - board: m5stack_atom
+            sketch: SimpleDisplay
+          - board: m5stack_capsule
+            sketch: SimpleDisplay
+          - board: m5stack_nanoc6
+            sketch: SimpleDisplay
+          - board: m5stack_stamp_s3
+            sketch: SimpleDisplay
+
+        include:
+          # Specific sketches
+          - sketch: PlotToSerial
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform-version: 3.1.3
+            platform: esp32
+            archi: esp32
+            board: m5stack_stickc_plus
+            build-properties: "-DUSING_HAT_TOF"
+          - sketch: PlotToSerial
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform-version: 3.1.3
+            platform: esp32
+            archi: esp32
+            board: m5stack_stickc_plus2
+            build-properties: "-DUSING_HAT_TOF"
+          - sketch: SimpleDisplay
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform-version: 3.1.3
+            platform: esp32
+            archi: esp32
+            board: m5stack_stickc_plus
+            build-properties: "-DUSING_HAT_TOF"
+          - sketch: SimpleDisplay
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform-version: 3.1.3
+            platform: esp32
+            archi: esp32
+            board: m5stack_stickc_plus2
+            build-properties: "-DUSING_HAT_TOF"
+          - sketch: DualSensor
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform-version: 3.1.3
+            platform: esp32
+            archi: esp32
+            board: m5stack_stickc_plus
+          - sketch: DualSensor
+            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+            platform-version: 3.1.3
+            platform: esp32
+            archi: esp32
+            board: m5stack_stickc_plus2
 
     steps:
       - name: Checkout
@@ -130,7 +173,7 @@ jobs:
           platform-url: ${{ matrix.platform-url }}
           required-libraries: ${{ env.REQUIRED_LIBRARIES }}
           extra-arduino-cli-args: ${{ matrix.cli-args }}
-          #build-properties: ${{ toJson(matrix.build-properties) }}
+          build-properties: ${{ matrix.build-properties }}
           sketch-names: ${{ matrix.sketch }}.ino
           sketch-names-find-start: ${{ env.SKETCH_NAMES_FIND_START }}/${{ matrix.unit }}
           #sketches-exclude: ${{ matrix.sketches-exclude }}

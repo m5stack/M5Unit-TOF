@@ -4,6 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 /*
-  Example using M5UnitUnified for UnitToF
+  Example of using M5UnitUnified to connect both UnitToF and HatToF
 */
-#include "main/SimpleDisplay.cpp"
+#include "main/DualSensor.cpp"

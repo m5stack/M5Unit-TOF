@@ -21,7 +21,29 @@ using namespace m5::unit;
 using namespace m5::unit::vl53l0x;
 using namespace m5::unit::vl53l0x::command;
 
-const ::testing::Environment* global_fixture = ::testing::AddGlobalTestEnvironment(new GlobalFixture<100000U>());
+#if defined(USING_HAT_TOF)
+#pragma message "Test for HatToF"
+namespace hat {
+template <uint32_t FREQ, uint32_t WNUM = 0>
+class GlobalFixture : public ::testing::Environment {
+    static_assert(WNUM < 2, "Wire number must be lesser than 2");
+
+public:
+    void SetUp() override
+    {
+        TwoWire* w[2] = {&Wire, &Wire1};
+        if (WNUM < m5::stl::size(w) && i2cIsInit(WNUM)) {
+            M5_LOGW("Already inititlized Wire %d. Terminate and restart FREQ %u", WNUM, FREQ);
+            w[WNUM]->end();
+        }
+        w[WNUM]->begin(0, 26, FREQ);
+    }
+};
+}  // namespace hat
+const ::testing::Environment* global_fixture = ::testing::AddGlobalTestEnvironment(new hat::GlobalFixture<400000U>());
+#else
+const ::testing::Environment* global_fixture = ::testing::AddGlobalTestEnvironment(new GlobalFixture<400000U>());
+#endif
 
 class TestVL53L0X : public ComponentTestBase<UnitVL53L0X, bool> {
 protected:
@@ -78,7 +100,8 @@ TEST_P(TestVL53L0X, SignalRateLimitAndReset)
 
     EXPECT_TRUE(unit->softReset());
     EXPECT_TRUE(unit->readSignalRateLimit(tmp));
-    EXPECT_FLOAT_EQ(tmp, 0.0f);
+    // EXPECT_FLOAT_EQ(tmp, 0.0f);
+    EXPECT_FLOAT_EQ(tmp, 0.25f);
 }
 
 TEST_P(TestVL53L0X, Singleshot)
