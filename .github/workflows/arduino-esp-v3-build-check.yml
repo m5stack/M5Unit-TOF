@@ -103,6 +103,7 @@ jobs:
         build-properties:
           - "-DUSING_UNIT_TOF"
           - "-DUSING_UNIT_TOF4M"
+          - "-DUSING_UNIT_TOF90"
 #          - "-DUSING_HAT_TOF"
 
         exclude:

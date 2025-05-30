@@ -59,6 +59,7 @@ jobs:
         unit:
           - UnitToF
           - UnitToF4M
+          - UnitToF90
 
         board:
           - Core
