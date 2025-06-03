@@ -91,7 +91,7 @@ RangeStatus Data::range_status() const
 
 const char UnitVL53L0X::name[] = "UnitVL53L0X";
 const types::uid_t UnitVL53L0X::uid{"UnitVL53L0X"_mmh3};
-const types::uid_t UnitVL53L0X::attr{0};
+const types::attr_t UnitVL53L0X::attr{attribute::AccessI2C};
 
 bool UnitVL53L0X::write_default_values()
 {
