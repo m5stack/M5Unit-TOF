@@ -23,6 +23,12 @@ ToF4M Unit communicates using the I2C protocol, providing advantages such as sim
 
 ToF HAT is a high precision laser-ranging sensor specifically designed for M5StickC. Integrated with VL53L0X and 940nm VCSEL emitter. It can provide high precision and low latency performance on object distance detection. 
 
+### SKU:U196
+
+The Unit Mini ToF-90° is an ultra-compact Time of Flight (ToF) ranging unit integrating the VL53L0X laser ranging module. 
+By rotating the laser emission module by 90°, it achieves horizontal forward detection with a 25° field of view. 
+
+
 ## Related Link
 
 See also examples using conventional methods here.
@@ -30,6 +36,8 @@ See also examples using conventional methods here.
 - [Unit ToF & Datasheet](https://docs.m5stack.com/en/unit/TOF)
 - [Unit ToF4M & Datasheet](https://docs.m5stack.com/en/unit/Unit-ToF4M)
 - [Hat ToF & Datasheet](https://docs.m5stack.com/en/hat/hat-tof)
+- [Unit Mini ToF-90 & Datasheet](https://docs.m5stack.com/en/unit/Unit%20Mini%20ToF-90)
+
 
 ## Required Libraries:
 
