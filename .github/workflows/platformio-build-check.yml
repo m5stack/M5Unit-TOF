@@ -129,6 +129,11 @@ jobs:
             framework: Arduino
             espressif32: latest
           - example: SimpleDisplay
+            unit: UnitToF90
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: SimpleDisplay
             unit: HatToF
             board: StickCPlus
             framework: Arduino
