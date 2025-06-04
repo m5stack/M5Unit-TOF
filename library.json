@@ -11,9 +11,9 @@
         "url": "https://github.com/m5stack/M5Unit-TOF.git"
     },
     "dependencies": {
-        "M5UnitUnified": "https://github.com/m5stack/M5UnitUnified.git@^0.0.5"
+        "m5stack/M5UnitUnified": ">=0.1.0"
     },
-    "version": "0.1.0",
+    "version": "0.2.0",
     "frameworks": [
         "arduino"
     ],

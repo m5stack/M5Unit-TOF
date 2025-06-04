@@ -59,6 +59,7 @@ jobs:
         unit:
           - UnitToF
           - UnitToF4M
+          - UnitToF90
 
         board:
           - Core
@@ -124,6 +125,11 @@ jobs:
             espressif32: latest
           - example: SimpleDisplay
             unit: UnitToF4M
+            board: Core
+            framework: Arduino
+            espressif32: latest
+          - example: SimpleDisplay
+            unit: UnitToF90
             board: Core
             framework: Arduino
             espressif32: latest

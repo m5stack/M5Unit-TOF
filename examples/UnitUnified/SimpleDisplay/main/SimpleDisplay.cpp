@@ -11,6 +11,21 @@
 #include <M5UnitUnifiedTOF.h>
 #include <M5Utility.h>
 
+// *************************************************************
+// Choose one define symbol to match the unit you are using
+// *************************************************************
+#if !defined(USING_UNIT_TOF) && !defined(USING_UNIT_TOF4M) && !defined(USING_HAT_TOF) && !defined(USING_UNIT_TOF90)
+// For UnitToF
+// #define USING_UNIT_TOF
+// For UnitToF4M
+// #define USING_UNIT_TOF4M
+// For HatToF
+// #define USING_HAT_TOF
+// For UnitToF90
+// #define USING_UNIT_TOF90
+#endif
+// *************************************************************
+
 namespace {
 auto& lcd = M5.Display;
 m5::unit::UnitUnified Units;
@@ -20,6 +35,8 @@ m5::unit::UnitToF unit;
 m5::unit::UnitToF4M unit;
 #elif defined(USING_HAT_TOF)
 m5::unit::HatToF unit;
+#elif defined(USING_UNIT_TOF90)
+m5::unit::UnitToF90 unit;
 #else
 #error Choose unit please!
 #endif
