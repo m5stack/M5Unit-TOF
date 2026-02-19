@@ -4,6 +4,8 @@ on: [release, workflow_dispatch]
 #   - main
 #   - master
 
+permissions:
+  contents: write
 defaults:
   run:
     shell: bash
