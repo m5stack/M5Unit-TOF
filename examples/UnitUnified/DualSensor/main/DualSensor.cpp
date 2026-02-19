@@ -9,20 +9,50 @@
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
 #include <M5UnitUnifiedTOF.h>
+#include <M5HAL.hpp>
 #include <Wire.h>
 #include <cassert>
 
 namespace {
 auto& lcd = M5.Display;
 m5::unit::UnitUnified Units;
+// ------
+// Please change it to the unit you use
 m5::unit::UnitToF unit;
+// m5::unit::UnitToF4M unit;
+// m5::unit::UnitToF90 unit;
+//  ------
 m5::unit::HatToF hat;
+
+struct HatPins {
+    int sda, scl;
+};
+
+HatPins get_hat_pins(const m5::board_t board)
+{
+    switch (board) {
+        case m5::board_t::board_M5StickC:
+        case m5::board_t::board_M5StickCPlus:
+        case m5::board_t::board_M5StickCPlus2:
+            return {0, 26};
+        case m5::board_t::board_M5StickS3:
+            return {8, 0};
+        case m5::board_t::board_M5StackCoreInk:
+            return {25, 26};
+        case m5::board_t::board_ArduinoNessoN1:
+            return {6, 7};
+        default:
+            return {-1, -1};
+    }
+}
 
 class View {
 public:
-    View(LovyanGFX& dst, const int32_t maxRange, const bool hat) : _hat{hat}, _max_value{maxRange}
+    View(LovyanGFX& dst, const int32_t maxRange, const bool hat, const int32_t frames = 8)
+        : _hat{hat}, _max_value{maxRange}, _frames{frames}
     {
         _sprite.setPsram(false);
+        _sprite.setColorDepth(8);
         auto p = _sprite.createSprite(dst.width(), dst.height() >> 1);
         assert(p && "Failed to createSprite");
         _sprite.setFont(&fonts::FreeSansBold9pt7b);
@@ -37,7 +67,7 @@ public:
             return;
         }
         _value   = val;
-        _counter = 8;
+        _counter = _frames;
         _inc     = (_value - _now) / _counter;
     }
 
@@ -87,7 +117,7 @@ public:
 private:
     bool _hat{}, _dirty{};
     LGFX_Sprite _sprite{};
-    int32_t _max_value{}, _value{}, _counter{};
+    int32_t _max_value{}, _frames{}, _value{}, _counter{};
     float _now{}, _inc{};
 };
 View* view[2]{};
@@ -102,11 +132,14 @@ void setup()
     m5cfg.internal_imu = false;  // Disable internal IMU
     m5cfg.internal_rtc = false;  // Disable internal RTC
     M5.begin(m5cfg);
+    M5.setTouchButtonHeightByRatio(100);
 
-    auto board = M5.getBoard();
-    if (board != m5::board_t::board_M5StickCPlus && board != m5::board_t::board_M5StickCPlus2) {
-        M5_LOGE("Example for StickCPlus/CPlus2");
-        lcd.clear(TFT_RED);
+    auto board      = M5.getBoard();
+    const auto pins = get_hat_pins(board);
+    M5_LOGI("getHatPin: SDA:%d SCL:%d", pins.sda, pins.scl);
+    if (pins.sda < 0 || pins.scl < 0) {
+        M5_LOGE("Unsupported board for DualSensor");
+        lcd.fillScreen(TFT_RED);
         while (true) {
             m5::utility::delay(10000);
         }
@@ -117,33 +150,50 @@ void setup()
         lcd.setRotation(0);
     }
 
-    // Wire settings
-    auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
-    auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
-    Wire.end();
-    Wire.begin(pin_num_sda, pin_num_scl, 400 * 1000U);
-
+    // HatToF on Wire1 (Hat connector)
     Wire1.end();
-    Wire1.begin(0, 26, 400 * 1000U);
+    Wire1.begin(pins.sda, pins.scl, 400 * 1000U);
 
-    // UnitToF connected to GROOVE with Wire
-    // HatToF connected to PIN sockect with Wire1
-    if (!Units.add(unit, Wire) || !Units.add(hat, Wire1) || !Units.begin()) {
-        M5_LOGE("Failed to begin");
-        lcd.clear(TFT_RED);
-        while (true) {
-            m5::utility::delay(10000);
+    // UnitToF on GROVE
+    if (board == m5::board_t::board_ArduinoNessoN1) {
+        // NessoN1: Wire is used internally by M5Unified; use SoftwareI2C for GROVE (Port B)
+        auto pin_num_sda = M5.getPin(m5::pin_name_t::port_b_out);
+        auto pin_num_scl = M5.getPin(m5::pin_name_t::port_b_in);
+        M5_LOGI("getPin(NessoN1): SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
+        m5::hal::bus::I2CBusConfig i2c_cfg;
+        i2c_cfg.pin_sda = m5::hal::gpio::getPin(pin_num_sda);
+        i2c_cfg.pin_scl = m5::hal::gpio::getPin(pin_num_scl);
+        auto i2c_bus    = m5::hal::bus::i2c::getBus(i2c_cfg);
+        if (!Units.add(unit, i2c_bus ? i2c_bus.value() : nullptr) || !Units.add(hat, Wire1) || !Units.begin()) {
+            M5_LOGE("Failed to begin");
+            lcd.fillScreen(TFT_RED);
+            while (true) {
+                m5::utility::delay(10000);
+            }
+        }
+    } else {
+        // Other boards: use Wire for Port A (GROVE)
+        auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
+        auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
+        M5_LOGI("getPin: SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
+        Wire.end();
+        Wire.begin(pin_num_sda, pin_num_scl, 400 * 1000U);
+        if (!Units.add(unit, Wire) || !Units.add(hat, Wire1) || !Units.begin()) {
+            M5_LOGE("Failed to begin");
+            lcd.fillScreen(TFT_RED);
+            while (true) {
+                m5::utility::delay(10000);
+            }
         }
     }
 
     M5_LOGI("M5UnitUnified has been begun");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
-    //
-    view[0] = new View(lcd, 2000, true);
-    view[1] = new View(lcd, 2000, false);
-
-    lcd.startWrite();
+    // e-ink displays cannot keep up with multi-frame animation; use 1 frame
+    const int32_t frames = lcd.isEPD() ? 1 : 8;
+    view[0]              = new View(lcd, 2000, true, frames);
+    view[1]              = new View(lcd, 2000, false, frames);
 }
 
 void loop()
@@ -166,9 +216,11 @@ void loop()
 
     uint32_t idx{};
     for (auto&& v : view) {
+        lcd.startWrite();
         if (v->update()) {
             v->push(&lcd, 0, idx == 0 ? 0 : lcd.height() >> 1);
         }
+        lcd.endWrite();
         ++idx;
     }
 }

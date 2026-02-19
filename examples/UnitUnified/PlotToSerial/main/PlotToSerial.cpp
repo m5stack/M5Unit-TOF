@@ -9,6 +9,7 @@
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
 #include <M5UnitUnifiedTOF.h>
+#include <M5HAL.hpp>
 #include <M5Utility.h>
 
 // *************************************************************
@@ -39,34 +40,104 @@ m5::unit::UnitToF90 unit;
 #else
 #error Choose unit please!
 #endif
+
+#if defined(USING_HAT_TOF)
+struct HatPins {
+    int sda, scl;
+};
+HatPins get_hat_pins(const m5::board_t board)
+{
+    switch (board) {
+        case m5::board_t::board_M5StickC:
+        case m5::board_t::board_M5StickCPlus:
+        case m5::board_t::board_M5StickCPlus2:
+            return {0, 26};
+        case m5::board_t::board_M5StickS3:
+            return {8, 0};
+        case m5::board_t::board_M5StackCoreInk:
+            return {25, 26};
+        case m5::board_t::board_ArduinoNessoN1:
+            return {6, 7};
+        default:
+            return {-1, -1};
+    }
+}
+#endif
+
 }  // namespace
 
 void setup()
 {
-    M5.begin();
+    auto m5cfg = M5.config();
+#if defined(USING_HAT_TOF)
+    m5cfg.pmic_button  = false;  // Disable BtnPWR
+    m5cfg.internal_imu = false;  // Disable internal IMU
+    m5cfg.internal_rtc = false;  // Disable internal RTC
+#endif
+    M5.begin(m5cfg);
+    M5.setTouchButtonHeightByRatio(100);
+
+    // The screen shall be in landscape mode
+    if (lcd.height() > lcd.width()) {
+        lcd.setRotation(1);
+    }
+
+    auto board = M5.getBoard();
 
 #if defined(USING_HAT_TOF)
-    Wire.begin(0, 26, 400 * 1000U);
-#else
-    auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
-    auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
-    M5_LOGI("getPin: SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
-    Wire.end();
-    Wire.begin(pin_num_sda, pin_num_scl, 400 * 1000U);
-#endif
-
-    if (!Units.add(unit, Wire) || !Units.begin()) {
-        M5_LOGE("Failed to begin");
-        lcd.clear(TFT_RED);
+    const auto pins = get_hat_pins(board);
+    M5_LOGI("getHatPin: SDA:%d SCL:%d", pins.sda, pins.scl);
+    if (pins.sda < 0 || pins.scl < 0) {
+        M5_LOGE("Unsupported board for HatToF");
+        lcd.fillScreen(TFT_RED);
         while (true) {
             m5::utility::delay(10000);
         }
     }
+    Wire1.end();
+    Wire1.begin(pins.sda, pins.scl, 400 * 1000U);
+    if (!Units.add(unit, Wire1) || !Units.begin()) {
+        M5_LOGE("Failed to begin");
+        lcd.fillScreen(TFT_RED);
+        while (true) {
+            m5::utility::delay(10000);
+        }
+    }
+#else
+    auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
+    auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
+    if (board == m5::board_t::board_ArduinoNessoN1) {
+        pin_num_sda = M5.getPin(m5::pin_name_t::port_b_out);
+        pin_num_scl = M5.getPin(m5::pin_name_t::port_b_in);
+        m5::hal::bus::I2CBusConfig i2c_cfg;
+        i2c_cfg.pin_sda = m5::hal::gpio::getPin(pin_num_sda);
+        i2c_cfg.pin_scl = m5::hal::gpio::getPin(pin_num_scl);
+        auto i2c_bus    = m5::hal::bus::i2c::getBus(i2c_cfg);
+        if (!Units.add(unit, i2c_bus ? i2c_bus.value() : nullptr) || !Units.begin()) {
+            M5_LOGE("Failed to begin");
+            lcd.fillScreen(TFT_RED);
+            while (true) {
+                m5::utility::delay(10000);
+            }
+        }
+    } else {
+        M5_LOGI("getPin: SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
+        Wire.end();
+        Wire.begin(pin_num_sda, pin_num_scl, 400 * 1000U);
+        if (!Units.add(unit, Wire) || !Units.begin()) {
+            M5_LOGE("Failed to begin");
+            lcd.fillScreen(TFT_RED);
+            while (true) {
+                m5::utility::delay(10000);
+            }
+        }
+    }
+#endif
 
     M5_LOGI("M5UnitUnified has been begun");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
-    lcd.clear(TFT_DARKGREEN);
+    lcd.fillScreen(TFT_DARKGREEN);
 }
 
 // Behavior when BtnA is clicked changes depending on the value
@@ -90,7 +161,7 @@ void button_function()
             unit.stopPeriodicMeasurement();
             m5::unit::vl53l1x::Data d{};
             if (unit.measureSingleshot(d)) {
-                M5.Log.printf("Singleshort[%d]: >Range:%d\nStatus:%u\n", sscnt, d.range(), d.range_status());
+                M5.Log.printf("Singleshot[%d]: >Range:%d\nStatus:%u\n", sscnt, d.range(), d.range_status());
             } else {
                 M5_LOGE("Failed to measure");
             }
@@ -144,7 +215,7 @@ void button_function()
             unit.stopPeriodicMeasurement();
             m5::unit::vl53l0x::Data d{};
             if (unit.measureSingleshot(d)) {
-                M5.Log.printf("Singleshort[%d]: >Range:%d\nStatus:%u\n", sscnt, d.range(), d.range_status());
+                M5.Log.printf("Singleshot[%d]: >Range:%d\nStatus:%u\n", sscnt, d.range(), d.range_status());
             } else {
                 M5_LOGE("Failed to measure");
             }
@@ -163,7 +234,6 @@ void button_function()
 void loop()
 {
     M5.update();
-    auto touch = M5.Touch.getDetail();
 
     Units.update();
 
@@ -172,7 +242,7 @@ void loop()
         M5.Log.printf(">Range:%d\n", unit.range());
     }
 
-    if (M5.BtnA.wasClicked() || touch.wasClicked()) {
+    if (M5.BtnA.wasClicked()) {
         button_function();
     } else if (M5.BtnA.wasHold()) {
         M5.Log.printf("Reset!\n");
