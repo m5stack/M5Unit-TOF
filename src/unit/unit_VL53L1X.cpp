@@ -164,7 +164,7 @@ bool UnitVL53L1X::begin()
 
     // Operating condition
     if (!write_operating_condition(_cfg.operating)) {
-        M5_LIB_LOGE("Failed to write_oOperation_condition");
+        M5_LIB_LOGE("Failed to write_operating_condition");
         return false;
     }
 
@@ -183,11 +183,11 @@ bool UnitVL53L1X::begin()
         if (!writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01) ||
             !writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeAbort)) ||
             !writeRegister8(VHV_CONFIG_TIMEOUT_MACROP_LOOP_BOUND, 0x09) || !writeRegister8(VHV_CONFIG_INIT, 0x00)) {
-            M5_LIB_LOGE("Failed to initialize prodcess");
+            M5_LIB_LOGE("Failed to initialize process");
             return false;
         }
     } else {
-        M5_LIB_LOGE("Failed to initialize prodcess");
+        M5_LIB_LOGE("Failed to initialize process");
         return false;
     }
 

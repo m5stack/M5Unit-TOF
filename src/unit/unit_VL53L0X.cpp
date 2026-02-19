@@ -50,10 +50,10 @@ constexpr default_value_t default_values[] = {
 
 constexpr uint8_t pre_phase_table[]                 = {0x18, 0x30, 0x40, 0x50};
 constexpr uint16_t pre_range_timeout_macrop_table[] = {0x00AF, 0x0096, 0x0083, 0x0073};
-constexpr uint8_t pre_msrc_timeout_macrop_tabke[]   = {0x2B, 0x25, 0x20, 0x1C};
+constexpr uint8_t pre_msrc_timeout_macrop_table[]   = {0x2B, 0x25, 0x20, 0x1C};
 
 struct final_values_t {
-    uint8_t phase_hi, phase_low, vcsel, phassecal_timout, phasecal_limit;
+    uint8_t phase_hi, phase_low, vcsel, phasecal_timeout, phasecal_limit;
 };
 
 constexpr final_values_t final_values_table[] = {{0x10, 0x08, 0x02, 0x0C, 0x30},
@@ -107,7 +107,7 @@ bool UnitVL53L0X::write_default_settings()
 {
     // Operating condition
     if (!writeRegister8(VHV_CONFIG_PAD_SCL_SDA_EXTSUP_HV, (_cfg.operating == Operating::Condition2V8))) {
-        M5_LIB_LOGE("Failed to write operation gcondition");
+        M5_LIB_LOGE("Failed to write operation condition");
         return false;
     }
 
@@ -409,7 +409,7 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
         !writeRegister8(PRE_RANGE_CONFIG_VALID_PHASE_LOW, 0x08) ||
         !writeRegister8(PRE_RANGE_CONFIG_VCSEL_PERIOD, pre_vcsel_period) ||
         !writeRegister16BE(PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI, pre_range_timeout_macrop_table[pre_idx]) ||
-        !writeRegister8(MSRC_CONFIG_TIMEOUT_MACROP, pre_msrc_timeout_macrop_tabke[pre_idx])) {
+        !writeRegister8(MSRC_CONFIG_TIMEOUT_MACROP, pre_msrc_timeout_macrop_table[pre_idx])) {
         M5_LIB_LOGE("Failed to write pre");
         return false;
     }
@@ -419,10 +419,10 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
     if (!writeRegister8(FINAL_RANGE_CONFIG_VALID_PHASE_HIGH, final_values_table[final_idx].phase_hi) ||
         !writeRegister8(FINAL_RANGE_CONFIG_VALID_PHASE_LOW, final_values_table[final_idx].phase_low) ||
         !writeRegister8(GLOBAL_CONFIG_VCSEL_WIDTH, final_values_table[final_idx].vcsel) ||
-        !writeRegister8(ALGO_PHASECAL_CONFIG_TIMEOUT, final_values_table[final_idx].phassecal_timout) ||
+        !writeRegister8(ALGO_PHASECAL_CONFIG_TIMEOUT, final_values_table[final_idx].phasecal_timeout) ||
         !writeRegister8(0xFF_u8, 0x01) ||
         !writeRegister8(ALGO_PHASECAL_LIM, final_values_table[final_idx].phasecal_limit) ||
-        !writeRegister8(0xFF_u8, 0x00) || !writeRegister8(PRE_RANGE_CONFIG_VCSEL_PERIOD, final_vcsel_period) ||
+        !writeRegister8(0xFF_u8, 0x00) || !writeRegister8(FINAL_RANGE_CONFIG_VCSEL_PERIOD, final_vcsel_period) ||
         !writeRegister16BE(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI,
                            pre_and_final_timeout_macop_table[pre_idx][final_idx])) {
         M5_LIB_LOGE("Failed to write final");
