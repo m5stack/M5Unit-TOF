@@ -42,7 +42,7 @@ enum class Distance : int8_t {
 
 /*!
   @enum Timing
-  @brief Timeing budget for ranging
+  @brief Timing budget for ranging
   @warning This value does not directly represent the measurement interval
   @warning inter-measurement period needs to be set
 */
@@ -177,12 +177,12 @@ public:
 
     ///@name Settings for begin
     ///@{
-    /*! @brief Gets the configration */
+    /*! @brief Gets the configuration */
     inline config_t config() const
     {
         return _cfg;
     }
-    //! @brief Set the configration
+    //! @brief Set the configuration
     inline void config(const config_t& cfg)
     {
         _cfg = cfg;
@@ -409,7 +409,7 @@ public:
     ///@}
 
     /*!
-      ROI coodinate
+      ROI coordinate
       @verbatim
       128,136,144,152,160,168,176,184,   192,200,208,216,224,232,240,248
       129,137,145,153,161,169,177,185,   193,201,209,217,225,233,241,249
