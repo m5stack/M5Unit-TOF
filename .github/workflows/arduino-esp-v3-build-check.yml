@@ -58,7 +58,6 @@ jobs:
 
         sketch:
           - PlotToSerial
-          - SimpleDisplay
 
 #        unit:
 #          - UnitToF
@@ -109,22 +108,6 @@ jobs:
           - "-DUSING_UNIT_TOF90"
 #          - "-DUSING_HAT_TOF"
 
-        exclude:
-          - board: m5stack_atom
-            sketch: SimpleDisplay
-          - board: m5stack_capsule
-            sketch: SimpleDisplay
-          - board: m5stack_nanoc6
-            sketch: SimpleDisplay
-          - board: m5stack_stamp_s3
-            sketch: SimpleDisplay
-          - board: arduino_nesso_n1
-            sketch: SimpleDisplay
-          - board: m5stack_cardputer
-            sketch: SimpleDisplay
-          - board: m5stack_tab5
-            sketch: SimpleDisplay
-
         include:
           # Specific sketches
           - sketch: PlotToSerial
@@ -154,13 +137,6 @@ jobs:
             platform: esp32
             archi: esp32
             board: arduino_nesso_n1
-            build-properties: "-DUSING_HAT_TOF"
-          - sketch: SimpleDisplay
-            platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
-            platform-version: 3.3.6
-            platform: esp32
-            archi: esp32
-            board: m5stack_stickc_plus2
             build-properties: "-DUSING_HAT_TOF"
           - sketch: DualSensor
             platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json

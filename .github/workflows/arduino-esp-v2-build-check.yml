@@ -59,7 +59,6 @@ jobs:
 
         sketch:
           - PlotToSerial
-          - SimpleDisplay
 
 #        unit:
 #          - UnitToF
@@ -88,11 +87,6 @@ jobs:
           - "-DUSING_UNIT_TOF4M"
           - "-DUSING_UNIT_TOF90"
 #          - "-DUSING_HAT_TOF"
-
-
-        exclude:
-          - board: m5stack-atom
-            sketch: SimpleDisplay
 
     steps:
       - name: Checkout

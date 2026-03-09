@@ -89,26 +89,6 @@ jobs:
 
         include:
           # Specific sketches
-          - example: SimpleDisplay
-            unit: UnitToF
-            board: Core
-            framework: Arduino
-            espressif32: latest
-          - example: SimpleDisplay
-            unit: UnitToF4M
-            board: Core
-            framework: Arduino
-            espressif32: latest
-          - example: SimpleDisplay
-            unit: UnitToF90
-            board: Core
-            framework: Arduino
-            espressif32: latest
-          - example: SimpleDisplay
-            unit: HatToF
-            board: StickCPlus2
-            framework: Arduino
-            espressif32: latest
           - example: DualSensor
             board: StickCPlus2
             framework: Arduino
