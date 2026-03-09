@@ -42,6 +42,20 @@ m5::unit::UnitToF90 unit;
 #error Choose unit please!
 #endif
 
+#if defined(USING_UNIT_TOF)
+constexpr uint32_t display_color{TFT_ORANGE};
+#elif defined(USING_UNIT_TOF4M)
+constexpr uint32_t display_color{0x00CC99U};  // Mint
+#elif defined(USING_HAT_TOF)
+constexpr uint32_t display_color{0xCC66FFU};  // Lavender
+#elif defined(USING_UNIT_TOF90)
+constexpr uint32_t display_color{0x66CCFFU};  // Sky blue
+#endif
+
+LGFX_Sprite sprite;
+bool has_lcd{};
+int16_t last_range{-1};
+
 #if defined(USING_HAT_TOF)
 struct HatPins {
     int sda, scl;
@@ -106,38 +120,43 @@ void setup()
         }
     }
 #else
-    auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
-    auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
-    // For NessoN1 GROVE
+    // NessoN1: Arduino Wire (I2C_NUM_0) cannot be used for GROVE port.
+    //   Wire is used by M5Unified In_I2C for internal devices (IOExpander etc.).
+    //   Wire1 exists but is reserved for HatPort — cannot be used for GROVE.
+    //   Reconfiguring Wire to GROVE pins breaks In_I2C, causing ESP_ERR_INVALID_STATE in M5.update().
+    //   Solution: Use SoftwareI2C via M5HAL (bit-banging) for the GROVE port.
+    // NanoC6: Wire.begin() on GROVE pins conflicts with m5::I2C_Class registered by Ex_I2C.setPort()
+    //   on the same I2C_NUM_0, causing sporadic NACK errors.
+    //   Solution: Use M5.Ex_I2C (m5::I2C_Class) directly instead of Arduino Wire.
+    bool unit_ready{};
     if (board == m5::board_t::board_ArduinoNessoN1) {
-        // Port A of the NessoN1 is QWIIC, then use portB (GROVE)
-        pin_num_sda = M5.getPin(m5::pin_name_t::port_b_out);
-        pin_num_scl = M5.getPin(m5::pin_name_t::port_b_in);
-        M5_LOGI("getPin(NessoN1): SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
-        // Wire is used internally, so SoftwareI2C handles the unit
+        // NessoN1: GROVE is on port_b (GPIO 5/4), not port_a (which maps to Wire pins 8/10)
+        auto pin_num_sda = M5.getPin(m5::pin_name_t::port_b_out);
+        auto pin_num_scl = M5.getPin(m5::pin_name_t::port_b_in);
+        M5_LOGI("getPin(M5HAL): SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
         m5::hal::bus::I2CBusConfig i2c_cfg;
         i2c_cfg.pin_sda = m5::hal::gpio::getPin(pin_num_sda);
         i2c_cfg.pin_scl = m5::hal::gpio::getPin(pin_num_scl);
         auto i2c_bus    = m5::hal::bus::i2c::getBus(i2c_cfg);
         M5_LOGI("Bus:%d", i2c_bus.has_value());
-        if (!Units.add(unit, i2c_bus ? i2c_bus.value() : nullptr) || !Units.begin()) {
-            M5_LOGE("Failed to begin");
-            lcd.fillScreen(TFT_RED);
-            while (true) {
-                m5::utility::delay(10000);
-            }
-        }
+        unit_ready = Units.add(unit, i2c_bus ? i2c_bus.value() : nullptr) && Units.begin();
+    } else if (board == m5::board_t::board_M5NanoC6) {
+        // NanoC6: Use M5.Ex_I2C (m5::I2C_Class, not Arduino Wire)
+        M5_LOGI("Using M5.Ex_I2C");
+        unit_ready = Units.add(unit, M5.Ex_I2C) && Units.begin();
     } else {
-        // Using TwoWire
+        auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
+        auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
         M5_LOGI("getPin: SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
         Wire.end();
         Wire.begin(pin_num_sda, pin_num_scl, 400 * 1000U);
-        if (!Units.add(unit, Wire) || !Units.begin()) {
-            M5_LOGE("Failed to begin");
-            lcd.fillScreen(TFT_RED);
-            while (true) {
-                m5::utility::delay(10000);
-            }
+        unit_ready = Units.add(unit, Wire) && Units.begin();
+    }
+    if (!unit_ready) {
+        M5_LOGE("Failed to begin");
+        lcd.fillScreen(TFT_RED);
+        while (true) {
+            m5::utility::delay(10000);
         }
     }
 #endif
@@ -145,7 +164,24 @@ void setup()
     M5_LOGI("M5UnitUnified has been begun");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
-    lcd.fillScreen(TFT_DARKGREEN);
+    // Display setup (skip for no-LCD or EPD devices)
+    has_lcd = lcd.width() > 0 && lcd.height() > 0 && !lcd.isEPD();
+    if (has_lcd) {
+        sprite.setPsram(false);
+        sprite.setColorDepth(1);
+        has_lcd = sprite.createSprite(lcd.width(), lcd.height());
+    }
+    if (has_lcd) {
+        sprite.setPaletteColor(0, TFT_BLACK);
+        sprite.setPaletteColor(1, display_color);
+        sprite.setFont(&fonts::Orbitron_Light_32);
+        sprite.setTextDatum(middle_center);
+        float scale = lcd.width() / (32 * 4.0f);
+        sprite.setTextSize(scale, scale);
+        sprite.setTextColor(1, 0);
+        sprite.fillSprite(0);
+        sprite.pushSprite(&lcd, 0, 0);
+    }
 }
 
 // Behavior when BtnA is clicked changes depending on the value
@@ -242,12 +278,22 @@ void button_function()
 void loop()
 {
     M5.update();
-
     Units.update();
 
-    if (unit.updated() && unit.range() >= 0) {
-        // Can be checked e.g. by serial plotters
-        M5.Log.printf(">Range:%d\n", unit.range());
+    if (unit.updated()) {
+        auto range = unit.range();
+        if (range >= 0) {
+            // Can be checked e.g. by serial plotters
+            M5.Log.printf(">Range:%d\n", range);
+
+            if (has_lcd && range != last_range) {
+                last_range = range;
+                sprite.fillSprite(0);
+                sprite.drawString(m5::utility::formatString("%d", range).c_str(), sprite.width() / 2,
+                                  sprite.height() / 2);
+                sprite.pushSprite(&lcd, 0, 0);
+            }
+        }
     }
 
     if (M5.BtnA.wasClicked()) {

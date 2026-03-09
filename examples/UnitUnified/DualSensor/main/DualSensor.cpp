@@ -10,8 +10,8 @@
 #include <M5UnitUnified.h>
 #include <M5UnitUnifiedTOF.h>
 #include <M5HAL.hpp>
+#include <M5Utility.h>
 #include <Wire.h>
-#include <cassert>
 
 namespace {
 auto& lcd = M5.Display;
@@ -23,6 +23,9 @@ m5::unit::UnitToF unit;
 // m5::unit::UnitToF90 unit;
 //  ------
 m5::unit::HatToF hat;
+
+constexpr uint32_t hat_color{0xCC66FFU};  // Lavender
+constexpr uint32_t unit_color{TFT_ORANGE};
 
 struct HatPins {
     int sda, scl;
@@ -46,23 +49,27 @@ HatPins get_hat_pins(const m5::board_t board)
     }
 }
 
+bool has_lcd{};
+
 class View {
 public:
-    View(LovyanGFX& dst, const int32_t maxRange, const bool hat, const int32_t frames = 8)
-        : _hat{hat}, _max_value{maxRange}, _frames{frames}
+    View(LovyanGFX& dst, const int32_t maxRange, const char* label, uint32_t color, const int32_t frames = 8)
+        : _label{label}, _max_value{(float)maxRange}, _frames{frames}
     {
         _sprite.setPsram(false);
-        _sprite.setColorDepth(8);
-        auto p = _sprite.createSprite(dst.width(), dst.height() >> 1);
-        assert(p && "Failed to createSprite");
-        _sprite.setFont(&fonts::FreeSansBold9pt7b);
-        _sprite.setTextColor(TFT_WHITE);
-        _sprite.setTextDatum(_hat ? textdatum_t::top_right : textdatum_t::top_left);
+        _sprite.setColorDepth(1);
+        _w      = dst.width();
+        _h      = dst.height() >> 1;
+        has_lcd = _sprite.createSprite(_w, _h);
+        _sprite.setPaletteColor(0, TFT_BLACK);
+        _sprite.setPaletteColor(1, color);
+        _sprite.setTextColor(1, 0);
+        _sprite.fillSprite(0);
     }
 
     void push_back(const int32_t range)
     {
-        int32_t val = std::max(std::min(_max_value, range), (int32_t)0);
+        int32_t val = std::max(std::min((int32_t)_max_value, range), (int32_t)0);
         if (_value == val) {
             return;
         }
@@ -77,33 +84,50 @@ public:
             return false;
         }
 
-        _sprite.clear();
-
         if (!--_counter) {
             _now = _value;
         } else {
             _now += _inc;
         }
 
-        uint32_t hgt = _sprite.height() * (_now / _max_value);
-        if (_hat) {
-            _sprite.fillTriangle(0, _sprite.height() - hgt, 0, _sprite.height(), _sprite.width() >> 1, _sprite.height(),
-                                 TFT_BLUE);
+        _sprite.fillSprite(0);
 
-            _sprite.drawString("Hat", _sprite.width(), 8);
-            _sprite.drawString(m5::utility::formatString("%4umm", (int32_t)_now).c_str(), _sprite.width(), 32);
-            _sprite.drawString("<<<<    ", _sprite.width(), _sprite.height() - 16);
+        const int32_t m     = 3;
+        const int32_t bar_h = std::max(_h / 8, (int32_t)4);
+        const int32_t bar_y = _h - bar_h - m;
+        const int32_t bar_w = _w - m * 2;
 
-        } else {
-            _sprite.fillTriangle(_sprite.width(), _sprite.height() - hgt, _sprite.width() >> 1, _sprite.height(),
-                                 _sprite.width(), _sprite.height(), TFT_RED);
-
-            _sprite.drawString("Unit", 0, 8);
-            _sprite.drawString(m5::utility::formatString("%4umm", (int32_t)_now).c_str(), 0, 32);
-            _sprite.drawString("    >>>>", 0, _sprite.height() - 16);
+        // Bar gauge: outline + proportional fill
+        _sprite.drawRect(m, bar_y, bar_w, bar_h, 1);
+        int32_t fill = (int32_t)((bar_w - 2) * (_now / _max_value));
+        if (fill > 0) {
+            _sprite.fillRect(m + 1, bar_y + 1, fill, bar_h - 2, 1);
         }
+
+        // Small labels: name (top-left), unit (top-right)
+        _sprite.setFont(&fonts::Font0);
+        _sprite.setTextSize(1);
+        _sprite.setTextDatum(top_left);
+        _sprite.drawString(_label, m + 1, m);
+        _sprite.setTextDatum(top_right);
+        _sprite.drawString("mm", _w - m - 1, m);
+
+        // Large distance number (Orbitron, centered above bar)
+        _sprite.setFont(&fonts::Orbitron_Light_32);
+        const int32_t text_top  = 10;
+        const int32_t text_area = bar_y - text_top;
+        float sx                = _w / (32.0f * 4);
+        float sy                = text_area / 36.0f;
+        float s                 = std::min(sx, sy);
+        if (s < 0.3f) {
+            s = 0.3f;
+        }
+        _sprite.setTextSize(s);
+        _sprite.setTextDatum(middle_center);
+        _sprite.drawString(m5::utility::formatString("%d", (int32_t)_now).c_str(), _w / 2, text_top + text_area / 2);
+
         _dirty = true;
-        return _dirty;
+        return true;
     }
 
     void push(LovyanGFX* dst, const uint32_t x, const uint32_t y)
@@ -115,10 +139,11 @@ public:
     }
 
 private:
-    bool _hat{}, _dirty{};
+    bool _dirty{};
     LGFX_Sprite _sprite{};
-    int32_t _max_value{}, _frames{}, _value{}, _counter{};
-    float _now{}, _inc{};
+    const char* _label;
+    float _max_value{}, _now{}, _inc{};
+    int32_t _w{}, _h{}, _frames{}, _value{}, _counter{};
 };
 View* view[2]{};
 
@@ -184,7 +209,7 @@ void setup()
         M5_LOGI("Bus:%d", i2c_bus.has_value());
         unit_ready = Units.add(unit, i2c_bus ? i2c_bus.value() : nullptr);
     } else {
-        // UnitToF on Wire
+        // UnitToF/ToF4M/ToF90 on Wire
         M5_LOGI("getPin: SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
         Wire.end();
         Wire.begin(pin_num_sda, pin_num_scl, 400 * 1000U);
@@ -203,10 +228,13 @@ void setup()
     M5_LOGI("M5UnitUnified has been begun");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
-    // e-ink displays cannot keep up with multi-frame animation; use 1 frame
-    const int32_t frames = lcd.isEPD() ? 1 : 8;
-    view[0]              = new View(lcd, 2000, true, frames);
-    view[1]              = new View(lcd, 2000, false, frames);
+    // Display setup (skip for no-LCD or EPD devices)
+    has_lcd = lcd.width() > 0 && lcd.height() > 0 && !lcd.isEPD();
+    if (has_lcd) {
+        const int32_t frames = 8;
+        view[0]              = new View(lcd, 2000, "HAT", hat_color, frames);
+        view[1]              = new View(lcd, 2000, "UNIT", unit_color, frames);
+    }
 }
 
 void loop()
@@ -217,23 +245,31 @@ void loop()
     if (hat.updated()) {
         auto range = hat.range();
         if (range >= 0) {
-            view[0]->push_back(range);
+            M5.Log.printf(">HatRange:%d\n", range);
+            if (has_lcd) {
+                view[0]->push_back(range);
+            }
         }
     }
     if (unit.updated()) {
         auto range = unit.range();
         if (range >= 0) {
-            view[1]->push_back(range);
+            M5.Log.printf(">UnitRange:%d\n", range);
+            if (has_lcd) {
+                view[1]->push_back(range);
+            }
         }
     }
 
-    uint32_t idx{};
-    for (auto&& v : view) {
-        lcd.startWrite();
-        if (v->update()) {
-            v->push(&lcd, 0, idx == 0 ? 0 : lcd.height() >> 1);
+    if (has_lcd) {
+        uint32_t idx{};
+        for (auto&& v : view) {
+            lcd.startWrite();
+            if (v->update()) {
+                v->push(&lcd, 0, idx == 0 ? 0 : lcd.height() >> 1);
+            }
+            lcd.endWrite();
+            ++idx;
         }
-        lcd.endWrite();
-        ++idx;
     }
 }
