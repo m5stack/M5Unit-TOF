@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 /*
-  Example using M5UnitUnified for UnitToF/Unit/ToF4M/HatToF
+  Example using M5UnitUnified for UnitToF/UnitToF4M/HatToF
 */
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
