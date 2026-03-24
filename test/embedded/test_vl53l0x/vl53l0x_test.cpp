@@ -191,7 +191,7 @@ TEST_F(TestVL53L0X, Periodic)
     }
 }
 
-TEST_F(TestVL53L0X, ChageI2CAddress)
+TEST_F(TestVL53L0X, ChangeI2CAddress)
 {
     SCOPED_TRACE(ustr);
 

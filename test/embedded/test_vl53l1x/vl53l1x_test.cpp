@@ -51,6 +51,7 @@ constexpr Window window_table[] = {Window::Below, Window::Beyond, Window::Out, W
 
 TEST_F(TestVL53L1X, CheckConfig)
 {
+    SCOPED_TRACE(ustr);
 }
 
 TEST_F(TestVL53L1X, Offset)
@@ -159,6 +160,10 @@ TEST_F(TestVL53L1X, DistanceAndTimingBudget)
                 EXPECT_TRUE(unit->readDistanceMode(dd));
                 EXPECT_EQ(d, dd);
                 EXPECT_EQ(d, unit->distanceMode());
+                // Verify TB is preserved after distance mode change
+                Timing tb_after{};
+                EXPECT_TRUE(unit->readTimingBudget(tb_after));
+                EXPECT_EQ(tb, tb_after) << "TB changed after writeDistanceMode";
             }
         }
     }
@@ -407,7 +412,7 @@ TEST_F(TestVL53L1X, Periodic)
     }
 }
 
-TEST_F(TestVL53L1X, ChageI2CAddress)
+TEST_F(TestVL53L1X, ChangeI2CAddress)
 {
     SCOPED_TRACE(ustr);
 
