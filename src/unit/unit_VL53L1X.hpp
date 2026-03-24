@@ -147,7 +147,7 @@ public:
       @brief Settings for begin
      */
     struct config_t {
-        //! Operatiing condition
+        //! Operating condition
         vl53l1x::Operating operating{vl53l1x::Operating::Condition2V8};
         //! Distance mode
         vl53l1x::Distance distance{vl53l1x::Distance::Long};
@@ -155,12 +155,14 @@ public:
         vl53l1x::Timing timing_budget{vl53l1x::Timing::Budget100ms};
         //! Start periodic measurement on begin?
         bool start_periodic{true};
-        //! Caliblate offset if start on begin
+        //! Calibrate offset if start on begin
         bool calibrate_offset{false};
-        //! Caliblate crosstalk if start on begin
+        //! Calibrate crosstalk if start on begin
         bool calibrate_xtalk{false};
     };
 
+    //! @brief Constructor
+    //! @param addr I2C address
     explicit UnitVL53L1X(const uint8_t addr = DEFAULT_ADDRESS)
         : Component(addr), _data{new m5::container::CircularBuffer<vl53l1x::Data>(1)}
     {
@@ -172,7 +174,9 @@ public:
     {
     }
 
+    //! @brief Begin communication with the sensor
     virtual bool begin() override;
+    //! @brief Update periodic measurement data
     virtual void update(const bool force = false) override;
 
     ///@name Settings for begin
@@ -266,12 +270,12 @@ public:
     ///@{
     /*!
       @brief Measurement single shot in the current settings
-      @param[out] data Measuerd data
+      @param[out] data Measured data
       @return True if successful
       @warning During periodic detection runs, an error is returned
       @warning Processing is blocked until results are returned
     */
-    bool measureSingleshot(vl53l1x::Data& d);
+    bool measureSingleshot(vl53l1x::Data& data);
     ///@}
 
     /*!
@@ -365,7 +369,7 @@ public:
       @brief Write the inter-measurement period(IMP)
       @param ms period (ms)
       @return True if successful
-      @warning The IMP must gerater than or equal to the TB otherwise the actual IMP is double the expected value
+      @warning The IMP must greater than or equal to the TB otherwise the actual IMP is double the expected value
     */
     bool writeInterMeasurementPeriod(const uint16_t ms);
     ///@}
@@ -379,13 +383,13 @@ public:
     */
     bool readDistanceThresholdWindow(vl53l1x::Window& window);
     /*!
-      @brief Read the lower distance threshould
+      @brief Read the lower distance threshold
       @param[out] mm distance (mm)
       @return True if successful
     */
     bool readDistanceThresholdLow(uint16_t& mm);
     /*!
-      @brief Read the higher distance threshould
+      @brief Read the higher distance threshold
       @param[out] mm distance (mm)
       @return True if successful
     */
@@ -394,7 +398,7 @@ public:
       @brief Write the threshold and window detection mode
       @param window window mode
       @param low lower distance threshold (mm)
-      @param high lower distance threshold (mm)
+      @param high higher distance threshold (mm)
       @return True if successful
     */
     bool writeDistanceThreshold(const vl53l1x::Window window, const uint16_t low, const uint16_t high);
@@ -468,7 +472,7 @@ public:
     ///@{
     /*!
       @brief Read the I2C address
-      @param i2c_address[out] I2C address
+      @param[out] i2c_address I2C address
       @return True if successful
      */
     bool readI2CAddress(uint8_t& i2c_address);

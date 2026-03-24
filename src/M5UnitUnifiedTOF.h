@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 /*!
-  @file M5UnitUnifiedToF.h
+  @file M5UnitUnifiedTOF.h
  */
 #ifndef M5_UNIT_UNIFIED_TOF_H
 #define M5_UNIT_UNIFIED_TOF_H

@@ -61,10 +61,10 @@ constexpr final_values_t final_values_table[] = {{0x10, 0x08, 0x02, 0x0C, 0x30},
                                                  {0x38, 0x08, 0x03, 0x08, 0x20},
                                                  {0x48, 0x08, 0x03, 0x07, 0x20}};
 
-constexpr uint16_t pre_and_final_timeout_macop_table[4][4] = {{0x02B0, 0x0296, 0x0284, 0x01EF},
-                                                              {0x02AA, 0x028F, 0x01FE, 0x01E3},
-                                                              {0x02A6, 0x028B, 0x01F2, 0x01D9},
-                                                              {0x02A3, 0x0288, 0x01EC, 0x01D3}};
+constexpr uint16_t pre_and_final_timeout_macrop_table[4][4] = {{0x02B0, 0x0296, 0x0284, 0x01EF},
+                                                               {0x02AA, 0x028F, 0x01FE, 0x01E3},
+                                                               {0x02A6, 0x028B, 0x01F2, 0x01D9},
+                                                               {0x02A3, 0x0288, 0x01EC, 0x01D3}};
 
 constexpr RangeStatus range_status_table[16] = {
     RangeStatus::Unknown,         RangeStatus::HardwareFailure, RangeStatus::HardwareFailure,
@@ -183,6 +183,12 @@ bool UnitVL53L0X::begin()
         return false;
     }
 
+    // Reset to ensure clean state
+    if (!soft_reset()) {
+        M5_LIB_LOGE("Failed to soft_reset");
+        return false;
+    }
+
     // Default settings
     if (!write_default_settings()) {
         return false;
@@ -190,7 +196,7 @@ bool UnitVL53L0X::begin()
 
     // Mode
     if (!writeMode(_cfg.mode)) {
-        M5_LIB_LOGE("FAiled to writeMode %u", _cfg.mode);
+        M5_LIB_LOGE("Failed to writeMode %u", _cfg.mode);
         return false;
     }
 
@@ -252,9 +258,9 @@ bool UnitVL53L0X::stop_periodic_measurement()
     return false;
 }
 
-bool UnitVL53L0X::measureSingleshot(vl53l0x::Data& d)
+bool UnitVL53L0X::measureSingleshot(vl53l0x::Data& data)
 {
-    d = {};
+    data = {};
 
     if (inPeriodic()) {
         M5_LIB_LOGE("Periodic measurements are running");
@@ -264,7 +270,7 @@ bool UnitVL53L0X::measureSingleshot(vl53l0x::Data& d)
     if (!writeRegister8(0x80_u8, 0x01) || !writeRegister8(0xFF_u8, 0x01) || !writeRegister8(0x00_u8, 0x00) ||
         !writeRegister8(0x91_u8, _stop) || !writeRegister8(0x00_u8, 0x01) || !writeRegister8(0xFF_u8, 0x00) ||
         !writeRegister8(0x80_u8, 0x00) || !writeRegister8(SYSTEM_RANGE_START, 0x01)) {
-        M5_LIB_LOGE("AAA");
+        M5_LIB_LOGE("Failed to start single shot");
         return false;
     }
 
@@ -277,14 +283,14 @@ bool UnitVL53L0X::measureSingleshot(vl53l0x::Data& d)
         done = readRegister8(SYSTEM_RANGE_START, v, 0) && ((v & 0x01) == 0);
     }
     if (!done) {
-        M5_LIB_LOGE("BBB");
+        M5_LIB_LOGE("Single shot start not confirmed");
         return false;
     }
 
     timeout_at = m5::utility::millis() + 1000;
     do {
         if (read_data_ready_status()) {
-            return read_measurement(d) && writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01);
+            return read_measurement(data) && writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01);
         }
         m5::utility::delay(1);
     } while (m5::utility::millis() <= timeout_at);
@@ -310,7 +316,7 @@ bool UnitVL53L0X::writeSignalRateLimit(const float mcps)
         M5_LIB_LOGE("Valid range is between 0.0f and 512.0f %f", mcps);
         return false;
     }
-    uint16_t v = mcps * (1 << 7);
+    uint16_t v = static_cast<uint16_t>(mcps * (1 << 7));
     return writeRegister16BE(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, v);
 }
 
@@ -363,7 +369,7 @@ bool UnitVL53L0X::readSignalRateLimit(float& mcps)
     uint16_t v{};
     mcps = std::numeric_limits<float>::quiet_NaN();
     if (readRegister16BE(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, v, 0)) {
-        mcps = (float)v / (1 << 7);  // 9.7 to float
+        mcps = static_cast<float>(v) / (1 << 7);  // 9.7 to float
         return true;
     }
     return false;
@@ -424,7 +430,7 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
         !writeRegister8(ALGO_PHASECAL_LIM, final_values_table[final_idx].phasecal_limit) ||
         !writeRegister8(0xFF_u8, 0x00) || !writeRegister8(FINAL_RANGE_CONFIG_VCSEL_PERIOD, final_vcsel_period) ||
         !writeRegister16BE(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI,
-                           pre_and_final_timeout_macop_table[pre_idx][final_idx])) {
+                           pre_and_final_timeout_macrop_table[pre_idx][final_idx])) {
         M5_LIB_LOGE("Failed to write final");
         return false;
     }

@@ -93,7 +93,7 @@ public:
       @brief Settings for begin
      */
     struct config_t {
-        //! Operatiing condition
+        //! Operating condition
         vl53l0x::Operating operating{vl53l0x::Operating::Condition2V8};
         //! Operation mode
         vl53l0x::Mode mode{vl53l0x::Mode::LongRange};
@@ -101,6 +101,8 @@ public:
         bool start_periodic{true};
     };
 
+    //! @brief Constructor
+    //! @param addr I2C address
     explicit UnitVL53L0X(const uint8_t addr = DEFAULT_ADDRESS)
         : Component(addr), _data{new m5::container::CircularBuffer<vl53l0x::Data>(1)}
     {
@@ -112,7 +114,9 @@ public:
     {
     }
 
+    //! @brief Begin communication with the sensor
     virtual bool begin() override;
+    //! @brief Update periodic measurement data
     virtual void update(const bool force = false) override;
 
     ///@name Settings for begin
@@ -151,7 +155,7 @@ public:
     }
     ///@}
 
-    ///@Properties
+    ///@name Properties
     ///@{
     /*!
       @brief Gets the inner mode
@@ -195,12 +199,12 @@ public:
     ///@{
     /*!
       @brief Measurement single shot in the current settings
-      @param[out] data Measuerd data
+      @param[out] data Measured data
       @return True if successful
       @warning During periodic detection runs, an error is returned
       @warning Processing is blocked until results are returned
     */
-    bool measureSingleshot(vl53l0x::Data& d);
+    bool measureSingleshot(vl53l0x::Data& data);
     ///@}
 
     //! @brief Software reset
@@ -234,7 +238,7 @@ public:
     ///@{
     /*!
       @brief Read the I2C address
-      @param i2c_address[out] I2C address
+      @param[out] i2c_address I2C address
       @return True if successful
      */
     bool readI2CAddress(uint8_t& i2c_address);

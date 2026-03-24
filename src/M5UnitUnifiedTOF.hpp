@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 /*!
-  @file M5UnitUnifiedToF.hpp
+  @file M5UnitUnifiedTOF.hpp
   @brief Main header of M5UnitToF
 
   @mainpage M5Unit-TOF
@@ -28,10 +28,10 @@ namespace m5 {
  */
 namespace unit {
 
-using UnitToF   = m5::unit::UnitVL53L0X;
-using UnitToF4M = m5::unit::UnitVL53L1X;
-using HatToF    = m5::unit::UnitVL53L0X;
-using UnitToF90 = m5::unit::UnitVL53L0X;
+using UnitToF   = m5::unit::UnitVL53L0X;  //!< UnitToF (SKU:U010) VL53L0X
+using UnitToF4M = m5::unit::UnitVL53L1X;  //!< UnitToF4M (SKU:U172) VL53L1X
+using HatToF    = m5::unit::UnitVL53L0X;  //!< HatToF (SKU:U072) VL53L0X
+using UnitToF90 = m5::unit::UnitVL53L0X;  //!< UnitToF90 (SKU:U196) VL53L0X
 
 }  // namespace unit
 }  // namespace m5
