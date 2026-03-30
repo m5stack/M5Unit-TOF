@@ -208,6 +208,7 @@ public:
     ///@}
 
     //! @brief Software reset
+    //! @return True if successful
     bool softReset();
 
     /*!
@@ -233,7 +234,7 @@ public:
     bool writeSignalRateLimit(const float mcps);
     ///@}
 
-    ///@warning Handling warning
+    ///@warning Changing the I2C address persists until the device is power-cycled or soft-reset
     ///@name I2C Address
     ///@{
     /*!
@@ -289,7 +290,7 @@ constexpr uint8_t SYSTEM_INTERRUPT_CLEAR{0x0B};
 constexpr uint8_t RESULT_INTERRUPT_STATUS{0x13};
 constexpr uint8_t RESULT_RANGE_STATUS{0x14};
 constexpr uint8_t RESULT_RANGE_STATUS_RESULT{0x1E};
-constexpr uint8_t ALGO_PHASECAL_CONFIG_TIMEOUT{0x30};
+constexpr uint8_t ALGO_PHASECAL_CONFIG_TIMEOUT{0x30};  // Bank 0
 constexpr uint8_t GLOBAL_CONFIG_VCSEL_WIDTH{0x32};
 constexpr uint8_t FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT{0x44};
 constexpr uint8_t MSRC_CONFIG_TIMEOUT_MACROP{0x46};
@@ -309,7 +310,7 @@ constexpr uint8_t VHV_CONFIG_PAD_SCL_SDA_EXTSUP_HV{0x89};
 constexpr uint8_t SOFT_RESET{0xBF};
 constexpr uint8_t MODEL_ID{0xC0};
 
-constexpr uint8_t ALGO_PHASECAL_LIM{0x30};
+constexpr uint8_t ALGO_PHASECAL_LIM{0x30};  // Bank 1 (via 0xFF=0x01)
 }  // namespace command
 }  // namespace vl53l0x
 ///@endcond

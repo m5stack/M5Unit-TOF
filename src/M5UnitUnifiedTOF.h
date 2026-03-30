@@ -5,6 +5,7 @@
  */
 /*!
   @file M5UnitUnifiedTOF.h
+  @brief C guard wrapper for M5UnitUnifiedTOF
  */
 #ifndef M5_UNIT_UNIFIED_TOF_H
 #define M5_UNIT_UNIFIED_TOF_H

@@ -105,10 +105,22 @@ bool UnitVL53L0X::write_default_values()
 
 bool UnitVL53L0X::write_default_settings()
 {
-    // Operating condition
-    if (!writeRegister8(VHV_CONFIG_PAD_SCL_SDA_EXTSUP_HV, (_cfg.operating == Operating::Condition2V8))) {
-        M5_LIB_LOGE("Failed to write operation condition");
-        return false;
+    // Operating condition (read-modify-write, bit 0 only)
+    {
+        uint8_t v{};
+        if (!readRegister8(VHV_CONFIG_PAD_SCL_SDA_EXTSUP_HV, v, 0)) {
+            M5_LIB_LOGE("Failed to read operation condition");
+            return false;
+        }
+        if (_cfg.operating == Operating::Condition2V8) {
+            v |= 0x01;
+        } else {
+            v &= ~0x01;
+        }
+        if (!writeRegister8(VHV_CONFIG_PAD_SCL_SDA_EXTSUP_HV, v)) {
+            M5_LIB_LOGE("Failed to write operation condition");
+            return false;
+        }
     }
 
     // Set I2C standard mode
@@ -442,10 +454,16 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
 
 bool UnitVL53L0X::softReset()
 {
-    if (soft_reset()) {
-        _mode     = Mode::Unknown;
-        _periodic = false;
-        return write_default_settings();
+    // Reset command to current address, then switch to default before resume
+    if (writeRegister8(SOFT_RESET, 0x00)) {
+        changeAddress(DEFAULT_ADDRESS);  // Sensor reverts to default address after reset
+        m5::utility::delay(1);
+        if (writeRegister8(SOFT_RESET, 0x01)) {  // resume at default address
+            m5::utility::delay(1);
+            _mode     = Mode::Unknown;
+            _periodic = false;
+            return write_default_settings();
+        }
     }
     return false;
 }

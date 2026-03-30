@@ -292,6 +292,7 @@ public:
     bool writeDistanceMode(const vl53l1x::Distance d);
 
     //! @brief Software reset
+    //! @return True if successful
     bool softReset();
 
     ///@name Offset
@@ -467,7 +468,7 @@ public:
     bool writeROICenter(const uint8_t center);
     ///@}
 
-    ///@warning Handling warning
+    ///@warning Changing the I2C address persists until the device is power-cycled or soft-reset
     ///@name I2C Address
     ///@{
     /*!
@@ -546,10 +547,10 @@ constexpr uint16_t DSS_CONFIG_APERTURE_ATTENUATION                              
 constexpr uint16_t MM_CONFIG_TIMEOUT_MACROP_A                                   {0x005A};
 constexpr uint16_t MM_CONFIG_TIMEOUT_MACROP_B                                   {0x005C};
 constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_A                                {0x005E};
-constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_A_HI                             {0x005E};
+constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_A_HI                             {0x005E};  // Alias of _A (ULD naming)
 constexpr uint16_t RANGE_CONFIG_VCSEL_PERIOD_A                                  {0x0060};
 constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_B                                {0x0061};
-constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_B_HI                             {0x0061};
+constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_B_HI                             {0x0061};  // Alias of _B (ULD naming)
 constexpr uint16_t RANGE_CONFIG_VCSEL_PERIOD_B                                  {0x0063};
 constexpr uint16_t RANGE_CONFIG_SIGMA_THRESH                                    {0x0064};
 constexpr uint16_t RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT_MCPS                   {0x0066};

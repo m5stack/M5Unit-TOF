@@ -20,10 +20,10 @@ constexpr uint8_t VALID_MODEL_ID{0xEA};
 constexpr uint8_t VALID_MODULE_TYPE{0xCC};
 
 enum class SystemMode : uint8_t {
-    RangeSingleShort = 0x10,
-    RangeBackToBack  = 0x20,
-    RangeTimed       = 0x40,
-    RangeAbort       = 0x80,
+    RangeSingleShot = 0x10,
+    RangeBackToBack = 0x20,
+    RangeTimed      = 0x40,
+    RangeAbort      = 0x80,
 };
 
 constexpr uint16_t default_values_start{0x2D};
@@ -284,7 +284,7 @@ bool UnitVL53L1X::measureSingleshot(vl53l1x::Data& data)
     }
 
     if (writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01) &&
-        writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeSingleShort))) {
+        writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeSingleShot))) {
         auto timeout_at = m5::utility::millis() + _interval * 2;
         do {
             if (read_data_ready_status()) {
@@ -297,10 +297,16 @@ bool UnitVL53L1X::measureSingleshot(vl53l1x::Data& data)
 
 bool UnitVL53L1X::softReset()
 {
-    if (soft_reset()) {
-        _distance = Distance::Unknown;
-        _periodic = false;
-        return wait_booted() && write_default_values();
+    // Reset command to current address, then switch to default before resume
+    if (writeRegister8(SOFT_RESET, 0x00)) {
+        changeAddress(DEFAULT_ADDRESS);  // Sensor reverts to default address after reset
+        m5::utility::delay(1);
+        if (writeRegister8(SOFT_RESET, 0x01)) {  // resume at default address
+            m5::utility::delay(1);
+            _distance = Distance::Unknown;
+            _periodic = false;
+            return wait_booted() && write_default_values();
+        }
     }
     return false;
 }
@@ -427,8 +433,9 @@ bool UnitVL53L1X::calibrateOffset(int16_t& offset, const uint16_t targetmm)
 {
     offset = 0;
 
-    if (!writeRegister8(ALGO_PART_TO_PART_RANGE_OFFSET_MM, 0x00) || !writeRegister8(MM_CONFIG_INNER_OFFSET_MM, 0x00) ||
-        !writeRegister8(MM_CONFIG_OUTER_OFFSET_MM, 0x00)) {
+    if (!writeRegister16BE(ALGO_PART_TO_PART_RANGE_OFFSET_MM, 0x0000) ||
+        !writeRegister16BE(MM_CONFIG_INNER_OFFSET_MM, 0x0000) ||
+        !writeRegister16BE(MM_CONFIG_OUTER_OFFSET_MM, 0x0000)) {
         return false;
     }
 
@@ -457,7 +464,7 @@ bool UnitVL53L1X::calibrateOffset(int16_t& offset, const uint16_t targetmm)
             return false;
         }
         M5_LIB_LOGV("tgt:%u avg(%u):%u", targetmm, avg_count, avg / avg_count);
-        offset = targetmm - (avg / avg_count);
+        offset = static_cast<int16_t>(static_cast<int32_t>(targetmm) - static_cast<int32_t>(avg / avg_count));
         return writeOffset(offset);
     }
     return false;
@@ -498,7 +505,7 @@ bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
     float avg{}, avg_signal_rate{}, avg_spad{};
     uint_fast8_t avg_count{}, avg_signal_rate_count{}, avg_spad_count{};
 
-    if (writeRegister8(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, 0x00) &&
+    if (writeRegister16BE(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, 0x0000) &&
         writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeTimed))) {
         uint32_t cnt{50};
         while (cnt--) {
@@ -537,6 +544,9 @@ bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
         M5_LIB_LOGV("tgt:%u avg(%u):%f sr(%u):%f spad(%u):%f", targetmm, avg_count, avg, avg_signal_rate_count,
                     avg_signal_rate, avg_spad_count, avg_spad);
 
+        if (targetmm == 0 || avg_spad == 0.f) {
+            return false;
+        }
         uint32_t tmp = static_cast<uint32_t>(512 * (avg_signal_rate * (1 - (avg / targetmm))) / avg_spad);
 
         if (tmp > 65535) {
