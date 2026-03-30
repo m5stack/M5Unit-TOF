@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 /*
-  Example using M5UnitUnified for UnitToF/Unit/ToF4M/HatToF
+  Example using M5UnitUnified for UnitToF/UnitToF4M/HatToF/UnitToF90
 */
 // *************************************************************
 // Choose one define symbol to match the unit you are using
