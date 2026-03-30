@@ -21,6 +21,20 @@ using namespace m5::unit;
 using namespace m5::unit::vl53l1x;
 using namespace m5::unit::vl53l1x::command;
 
+namespace {
+void i2c_scan(TwoWire& wire)
+{
+    M5_LOGI("I2C scan start");
+    for (uint8_t addr = 0x08; addr < 0x78; ++addr) {
+        wire.beginTransmission(addr);
+        if (wire.endTransmission() == 0) {
+            M5_LOGI("  Found device at 0x%02X", addr);
+        }
+    }
+    M5_LOGI("I2C scan end");
+}
+}  // namespace
+
 class TestVL53L1X : public I2CComponentTestBase<UnitVL53L1X> {
 protected:
     virtual UnitVL53L1X* get_instance() override
@@ -32,6 +46,22 @@ protected:
             ptr->component_config(ccfg);
         }
         return ptr;
+    }
+    virtual bool begin() override
+    {
+#if 0
+        // I2C scan for debugging (uses temporary Wire, then delegates to base)
+        auto board = M5.getBoard();
+        if (board != m5::board_t::board_ArduinoNessoN1 && board != m5::board_t::board_M5NanoC6) {
+            auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
+            auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
+            Wire.end();
+            Wire.begin(pin_num_sda, pin_num_scl, 100000);
+            i2c_scan(Wire);
+            Wire.end();
+        }
+#endif
+        return I2CComponentTestBase<UnitVL53L1X>::begin();
     }
 };
 
@@ -444,4 +474,12 @@ TEST_F(TestVL53L1X, ChangeI2CAddress)
     EXPECT_TRUE(unit->readI2CAddress(addr));
     EXPECT_EQ(addr, +UnitVL53L1X::DEFAULT_ADDRESS);
     EXPECT_EQ(unit->address(), +UnitVL53L1X::DEFAULT_ADDRESS);
+
+    // Verify softReset restores default address
+    EXPECT_TRUE(unit->changeI2CAddress(0x10));
+    EXPECT_EQ(unit->address(), 0x10);
+    EXPECT_TRUE(unit->softReset());
+    EXPECT_EQ(unit->address(), +UnitVL53L1X::DEFAULT_ADDRESS);
+    EXPECT_TRUE(unit->readI2CAddress(addr));
+    EXPECT_EQ(addr, +UnitVL53L1X::DEFAULT_ADDRESS);
 }
