@@ -53,6 +53,27 @@ See also examples using conventional methods here.
 ## Examples
 See also [examples/UnitUnified](examples/UnitUnified)
 
+### For ArduinoIDE settings
+You must choose a define symbol for the unit you will use.
+(Rewrite source or specify with compile options)
+
+- PlotToSerial
+```cpp
+// *************************************************************
+// Choose one define symbol to match the unit you are using
+// *************************************************************
+#if !defined(USING_UNIT_TOF) && !defined(USING_UNIT_TOF4M) && !defined(USING_HAT_TOF) && !defined(USING_UNIT_TOF90)
+// For UnitToF
+// #define USING_UNIT_TOF
+// For UnitToF4M
+// #define USING_UNIT_TOF4M
+// For HatToF
+// #define USING_HAT_TOF
+// For UnitToF90
+// #define USING_UNIT_TOF90
+#endif
+```
+
 ## Doxygen document
 [GitHub Pages](https://m5stack.github.io/M5Unit-TOF/)
 
@@ -69,4 +90,3 @@ If you want to output Git commit hashes to html, do it for the git cloned folder
 - [Doxygen](https://www.doxygen.nl/)
 - [pcregrep](https://formulae.brew.sh/formula/pcre2)
 - [Git](https://git-scm.com/) (Output commit hash to html)
-
