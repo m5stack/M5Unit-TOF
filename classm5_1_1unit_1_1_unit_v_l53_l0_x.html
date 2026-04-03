@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-TOF<span id="projectnumber">&#160;0.2.0 git rev:0691afb</span>
+   <div id="projectname">M5Unit-TOF<span id="projectnumber">&#160;0.2.1 git rev:ffeb3c9</span>
    </div>
   </td>
  </tr>
@@ -125,18 +125,19 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1ee92026fb2fd98ae672a943338d0238" id="r_a1ee92026fb2fd98ae672a943338d0238"><td class="memItemLeft" align="right" valign="top"><a id="a1ee92026fb2fd98ae672a943338d0238" name="a1ee92026fb2fd98ae672a943338d0238"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>UnitVL53L0X</b> (const uint8_t addr=DEFAULT_ADDRESS)</td></tr>
+<tr class="memitem:a1ee92026fb2fd98ae672a943338d0238" id="r_a1ee92026fb2fd98ae672a943338d0238"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1ee92026fb2fd98ae672a943338d0238">UnitVL53L0X</a> (const uint8_t addr=DEFAULT_ADDRESS)</td></tr>
+<tr class="memdesc:a1ee92026fb2fd98ae672a943338d0238"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <br /></td></tr>
 <tr class="separator:a1ee92026fb2fd98ae672a943338d0238"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a237fd45c18183fb5f2217130b531f34b" id="r_a237fd45c18183fb5f2217130b531f34b"><td class="memItemLeft" align="right" valign="top"><a id="a237fd45c18183fb5f2217130b531f34b" name="a237fd45c18183fb5f2217130b531f34b"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () override</td></tr>
+<tr class="memdesc:a237fd45c18183fb5f2217130b531f34b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begin communication with the sensor. <br /></td></tr>
 <tr class="separator:a237fd45c18183fb5f2217130b531f34b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac10f6e529b74efd9f1d366fbafe78e4" id="r_aac10f6e529b74efd9f1d366fbafe78e4"><td class="memItemLeft" align="right" valign="top"><a id="aac10f6e529b74efd9f1d366fbafe78e4" name="aac10f6e529b74efd9f1d366fbafe78e4"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (const bool force=false) override</td></tr>
+<tr class="memdesc:aac10f6e529b74efd9f1d366fbafe78e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update periodic measurement data. <br /></td></tr>
 <tr class="separator:aac10f6e529b74efd9f1d366fbafe78e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e045f270921cc9d31e93195ebc04d1d" id="r_a2e045f270921cc9d31e93195ebc04d1d"><td class="memItemLeft" align="right" valign="top"><a id="a2e045f270921cc9d31e93195ebc04d1d" name="a2e045f270921cc9d31e93195ebc04d1d"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>softReset</b> ()</td></tr>
-<tr class="memdesc:a2e045f270921cc9d31e93195ebc04d1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Software reset. <br /></td></tr>
+<tr class="memitem:a2e045f270921cc9d31e93195ebc04d1d" id="r_a2e045f270921cc9d31e93195ebc04d1d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2e045f270921cc9d31e93195ebc04d1d">softReset</a> ()</td></tr>
+<tr class="memdesc:a2e045f270921cc9d31e93195ebc04d1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Software reset.  <br /></td></tr>
 <tr class="separator:a2e045f270921cc9d31e93195ebc04d1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a646c1338d396fdef434c46166fbd8057" id="r_a646c1338d396fdef434c46166fbd8057"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a646c1338d396fdef434c46166fbd8057">writeMode</a> (const <a class="el" href="unit___v_l53_l0_x_8hpp.html#a519d2071a932167500d19d94ffef076b">vl53l0x::Mode</a> <a class="el" href="#a3ca50d6b188cd3358e43617e94d29267">mode</a>)</td></tr>
 <tr class="memdesc:a646c1338d396fdef434c46166fbd8057"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the operation mode.  <br /></td></tr>
@@ -144,11 +145,11 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>softReset</b> ()</td>
 <tr><td colspan="2"><div class="groupHeader">Settings for begin</div></td></tr>
 <tr class="memitem:ac7a642dfd1543fc844f74045463b6644" id="r_ac7a642dfd1543fc844f74045463b6644"><td class="memItemLeft" align="right" valign="top"><a id="ac7a642dfd1543fc844f74045463b6644" name="ac7a642dfd1543fc844f74045463b6644"></a>
 <a class="el" href="structm5_1_1unit_1_1_unit_v_l53_l0_x_1_1config__t.html">config_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>config</b> () const</td></tr>
-<tr class="memdesc:ac7a642dfd1543fc844f74045463b6644"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the configration. <br /></td></tr>
+<tr class="memdesc:ac7a642dfd1543fc844f74045463b6644"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the configuration. <br /></td></tr>
 <tr class="separator:ac7a642dfd1543fc844f74045463b6644"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3efc2f4e31a207bf0ed0cf879ea221a7" id="r_a3efc2f4e31a207bf0ed0cf879ea221a7"><td class="memItemLeft" align="right" valign="top"><a id="a3efc2f4e31a207bf0ed0cf879ea221a7" name="a3efc2f4e31a207bf0ed0cf879ea221a7"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>config</b> (const <a class="el" href="structm5_1_1unit_1_1_unit_v_l53_l0_x_1_1config__t.html">config_t</a> &amp;cfg)</td></tr>
-<tr class="memdesc:a3efc2f4e31a207bf0ed0cf879ea221a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the configration. <br /></td></tr>
+<tr class="memdesc:a3efc2f4e31a207bf0ed0cf879ea221a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the configuration. <br /></td></tr>
 <tr class="separator:a3efc2f4e31a207bf0ed0cf879ea221a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Measurement data by periodic</div></td></tr>
 <tr class="memitem:a35b5ec67648617c8eeee89e5b017f283" id="r_a35b5ec67648617c8eeee89e5b017f283"><td class="memItemLeft" align="right" valign="top">int16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a35b5ec67648617c8eeee89e5b017f283">range</a> () const</td></tr>
@@ -162,9 +163,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>valid</b> () const</t
 <a class="el" href="unit___v_l53_l0_x_8hpp.html#a67692dfb19a5e62796ca834598b1dc79">vl53l0x::RangeStatus</a>&#160;</td><td class="memItemRight" valign="bottom"><b>range_status</b> () const</td></tr>
 <tr class="memdesc:a5e56eed9dae44b1cb0b9c5096a602225"><td class="mdescLeft">&#160;</td><td class="mdescRight">Oldest measured range status. <br /></td></tr>
 <tr class="separator:a5e56eed9dae44b1cb0b9c5096a602225"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader"></div></td></tr>
-<tr class="memitem:a3ca50d6b188cd3358e43617e94d29267" id="r_a3ca50d6b188cd3358e43617e94d29267"><td class="memItemLeft" align="right" valign="top"><a class="el" href="unit___v_l53_l0_x_8hpp.html#a519d2071a932167500d19d94ffef076b">vl53l0x::Mode</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3ca50d6b188cd3358e43617e94d29267">mode</a> () const</td></tr>
-<tr class="memdesc:a3ca50d6b188cd3358e43617e94d29267"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the inner mode.  <br /></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Properties</div></td></tr>
+<tr class="memitem:a3ca50d6b188cd3358e43617e94d29267" id="r_a3ca50d6b188cd3358e43617e94d29267"><td class="memItemLeft" align="right" valign="top"><a id="a3ca50d6b188cd3358e43617e94d29267" name="a3ca50d6b188cd3358e43617e94d29267"></a>
+<a class="el" href="unit___v_l53_l0_x_8hpp.html#a519d2071a932167500d19d94ffef076b">vl53l0x::Mode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>mode</b> () const</td></tr>
+<tr class="memdesc:a3ca50d6b188cd3358e43617e94d29267"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the inner mode. <br /></td></tr>
 <tr class="separator:a3ca50d6b188cd3358e43617e94d29267"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Periodic measurement</div></td></tr>
 <tr class="memitem:a132bbbf2b8970e1e06e9a7fab4339836" id="r_a132bbbf2b8970e1e06e9a7fab4339836"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a132bbbf2b8970e1e06e9a7fab4339836">startPeriodicMeasurement</a> ()</td></tr>
@@ -177,9 +179,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>valid</b> () const</t
 <tr class="memdesc:a3f2983a1b3647dbb2371781103256903"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop periodic measurement.  <br /></td></tr>
 <tr class="separator:a3f2983a1b3647dbb2371781103256903"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Single shot measurement</div></td></tr>
-<tr class="memitem:a572f1bafc3079ab1d2931ba4ce3bdebf" id="r_a572f1bafc3079ab1d2931ba4ce3bdebf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a572f1bafc3079ab1d2931ba4ce3bdebf">measureSingleshot</a> (<a class="el" href="structm5_1_1unit_1_1vl53l0x_1_1_data.html">vl53l0x::Data</a> &amp;d)</td></tr>
-<tr class="memdesc:a572f1bafc3079ab1d2931ba4ce3bdebf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Measurement single shot in the current settings.  <br /></td></tr>
-<tr class="separator:a572f1bafc3079ab1d2931ba4ce3bdebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53fd6f16bfd65bad0a5319d4f37fa72d" id="r_a53fd6f16bfd65bad0a5319d4f37fa72d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a53fd6f16bfd65bad0a5319d4f37fa72d">measureSingleshot</a> (<a class="el" href="structm5_1_1unit_1_1vl53l0x_1_1_data.html">vl53l0x::Data</a> &amp;data)</td></tr>
+<tr class="memdesc:a53fd6f16bfd65bad0a5319d4f37fa72d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Measurement single shot in the current settings.  <br /></td></tr>
+<tr class="separator:a53fd6f16bfd65bad0a5319d4f37fa72d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Signal range limit</div></td></tr>
 <tr class="memitem:a404ad5dd4db74a8970d8c1fb44d3736e" id="r_a404ad5dd4db74a8970d8c1fb44d3736e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a404ad5dd4db74a8970d8c1fb44d3736e">readSignalRateLimit</a> (float &amp;mcps)</td></tr>
 <tr class="memdesc:a404ad5dd4db74a8970d8c1fb44d3736e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the signal range limit.  <br /></td></tr>
@@ -188,7 +190,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>valid</b> () const</t
 <tr class="memdesc:a1d85f3b51f5b2e67fd2e67f6e6878973"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the signal range limit.  <br /></td></tr>
 <tr class="separator:a1d85f3b51f5b2e67fd2e67f6e6878973"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">I2C Address</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><dl class="section warning"><dt>Warning</dt><dd>Handling warning </dd></dl>
+<tr><td colspan="2"><div class="groupText"><dl class="section warning"><dt>Warning</dt><dd>Changing the I2C address persists until the device is power-cycled or soft-reset </dd></dl>
 </div></td></tr>
 <tr class="memitem:af3362a305da601081fb47883e44733cf" id="r_af3362a305da601081fb47883e44733cf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af3362a305da601081fb47883e44733cf">readI2CAddress</a> (uint8_t &amp;i2c_address)</td></tr>
 <tr class="memdesc:af3362a305da601081fb47883e44733cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the I2C address.  <br /></td></tr>
@@ -250,7 +252,41 @@ std::unique_ptr&lt; m5::container::CircularBuffer&lt; <a class="el" href="struct
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>ToF unit. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="a1ee92026fb2fd98ae672a943338d0238" name="a1ee92026fb2fd98ae672a943338d0238"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ee92026fb2fd98ae672a943338d0238">&#9670;&#160;</a></span>UnitVL53L0X()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">m5::unit::UnitVL53L0X::UnitVL53L0X </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t</td>          <td class="paramname"><span class="paramname"><em>addr</em></span><span class="paramdefsep"> = </span><span class="paramdefval">DEFAULT_ADDRESS</span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructor. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">addr</td><td>I2C address </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
 <a id="addf2fc09d94ef585055a3a9a14d2de6b" name="addf2fc09d94ef585055a3a9a14d2de6b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#addf2fc09d94ef585055a3a9a14d2de6b">&#9670;&#160;</a></span>changeI2CAddress()</h2>
 
@@ -277,8 +313,8 @@ std::unique_ptr&lt; m5::container::CircularBuffer&lt; <a class="el" href="struct
 
 </div>
 </div>
-<a id="a572f1bafc3079ab1d2931ba4ce3bdebf" name="a572f1bafc3079ab1d2931ba4ce3bdebf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a572f1bafc3079ab1d2931ba4ce3bdebf">&#9670;&#160;</a></span>measureSingleshot()</h2>
+<a id="a53fd6f16bfd65bad0a5319d4f37fa72d" name="a53fd6f16bfd65bad0a5319d4f37fa72d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a53fd6f16bfd65bad0a5319d4f37fa72d">&#9670;&#160;</a></span>measureSingleshot()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -286,7 +322,7 @@ std::unique_ptr&lt; m5::container::CircularBuffer&lt; <a class="el" href="struct
         <tr>
           <td class="memname">bool m5::unit::UnitVL53L0X::measureSingleshot </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structm5_1_1unit_1_1vl53l0x_1_1_data.html">vl53l0x::Data</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>d</em></span></td><td>)</td>
+          <td class="paramtype"><a class="el" href="structm5_1_1unit_1_1vl53l0x_1_1_data.html">vl53l0x::Data</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>data</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -295,7 +331,7 @@ std::unique_ptr&lt; m5::container::CircularBuffer&lt; <a class="el" href="struct
 <p>Measurement single shot in the current settings. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">data</td><td>Measuerd data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">data</td><td>Measured data </td></tr>
   </table>
   </dd>
 </dl>
@@ -303,34 +339,6 @@ std::unique_ptr&lt; m5::container::CircularBuffer&lt; <a class="el" href="struct
 <dl class="section warning"><dt>Warning</dt><dd>During periodic detection runs, an error is returned </dd>
 <dd>
 Processing is blocked until results are returned </dd></dl>
-
-</div>
-</div>
-<a id="a3ca50d6b188cd3358e43617e94d29267" name="a3ca50d6b188cd3358e43617e94d29267"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3ca50d6b188cd3358e43617e94d29267">&#9670;&#160;</a></span>mode()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="unit___v_l53_l0_x_8hpp.html#a519d2071a932167500d19d94ffef076b">vl53l0x::Mode</a> m5::unit::UnitVL53L0X::mode </td>
-          <td>(</td>
-          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Gets the inner mode. </p>
-<p>@Properties </p>
 
 </div>
 </div>
@@ -380,7 +388,7 @@ Processing is blocked until results are returned </dd></dl>
 <p>Read the I2C address. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">i2c_address[out]</td><td>I2C address </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">i2c_address</td><td>I2C address </td></tr>
   </table>
   </dd>
 </dl>
@@ -410,6 +418,26 @@ Processing is blocked until results are returned </dd></dl>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+
+</div>
+</div>
+<a id="a2e045f270921cc9d31e93195ebc04d1d" name="a2e045f270921cc9d31e93195ebc04d1d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e045f270921cc9d31e93195ebc04d1d">&#9670;&#160;</a></span>softReset()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool m5::unit::UnitVL53L0X::softReset </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Software reset. </p>
 <dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
 
 </div>
