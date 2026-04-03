@@ -14,21 +14,28 @@
 #include <googletest/test_helper.hpp>
 #include <unit/unit_VL53L1X.hpp>
 #include <cmath>
-#include <random>
+#include <esp_random.h>
 
 using namespace m5::unit::googletest;
 using namespace m5::unit;
 using namespace m5::unit::vl53l1x;
 using namespace m5::unit::vl53l1x::command;
 
-const ::testing::Environment* global_fixture = ::testing::AddGlobalTestEnvironment(new GlobalFixture<400000U>());
+namespace {
+void i2c_scan(TwoWire& wire)
+{
+    M5_LOGI("I2C scan start");
+    for (uint8_t addr = 0x08; addr < 0x78; ++addr) {
+        wire.beginTransmission(addr);
+        if (wire.endTransmission() == 0) {
+            M5_LOGI("  Found device at 0x%02X", addr);
+        }
+    }
+    M5_LOGI("I2C scan end");
+}
+}  // namespace
 
-struct TestParams {
-    bool hal;
-    bool store_on_change;
-};
-
-class TestVL53L1X : public ComponentTestBase<UnitVL53L1X, bool> {
+class TestVL53L1X : public I2CComponentTestBase<UnitVL53L1X> {
 protected:
     virtual UnitVL53L1X* get_instance() override
     {
@@ -40,20 +47,25 @@ protected:
         }
         return ptr;
     }
-    virtual bool is_using_hal() const override
+    virtual bool begin() override
     {
-        return GetParam();
-    };
+#if 0
+        // I2C scan for debugging (uses temporary Wire, then delegates to base)
+        auto board = M5.getBoard();
+        if (board != m5::board_t::board_ArduinoNessoN1 && board != m5::board_t::board_M5NanoC6) {
+            auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
+            auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
+            Wire.end();
+            Wire.begin(pin_num_sda, pin_num_scl, 100000);
+            i2c_scan(Wire);
+            Wire.end();
+        }
+#endif
+        return I2CComponentTestBase<UnitVL53L1X>::begin();
+    }
 };
 
-// INSTANTIATE_TEST_SUITE_P(ParamValues, TestMAX30100,
-//                         ::testing::Values(false, true));
-// INSTANTIATE_TEST_SUITE_P(ParamValues, TestMAX30100,
-// ::testing::Values(true));
-INSTANTIATE_TEST_SUITE_P(ParamValues, TestVL53L1X, ::testing::Values(false));
-
 namespace {
-auto rng                            = std::default_random_engine{};
 constexpr Distance distance_table[] = {
     Distance::Short,
     Distance::Long,
@@ -67,11 +79,12 @@ constexpr Window window_table[] = {Window::Below, Window::Beyond, Window::Out, W
 
 }  // namespace
 
-TEST_P(TestVL53L1X, CheckConfig)
+TEST_F(TestVL53L1X, CheckConfig)
 {
+    SCOPED_TRACE(ustr);
 }
 
-TEST_P(TestVL53L1X, Offset)
+TEST_F(TestVL53L1X, Offset)
 {
     SCOPED_TRACE(ustr);
 
@@ -104,7 +117,7 @@ TEST_P(TestVL53L1X, Offset)
     EXPECT_EQ(1023, offset2);
 }
 
-TEST_P(TestVL53L1X, Xtalk)
+TEST_F(TestVL53L1X, Xtalk)
 {
     SCOPED_TRACE(ustr);
 
@@ -116,7 +129,9 @@ TEST_P(TestVL53L1X, Xtalk)
 
     uint32_t cnt{32};
     while (cnt--) {
-        uint16_t x = rng() & 0xFFFF;
+        uint16_t x = esp_random() & 0xFFFF;
+        auto s     = m5::utility::formatString("Xtalk:0x%04X", x);
+        SCOPED_TRACE(s);
         EXPECT_TRUE(unit->writeXtalk(x));
         EXPECT_TRUE(unit->readXtalk(xtalk2));
         EXPECT_EQ((x << 9) / 1000, (xtalk2 << 9) / 1000) << x;
@@ -126,7 +141,7 @@ TEST_P(TestVL53L1X, Xtalk)
     EXPECT_EQ(0, xtalk2);
 }
 
-TEST_P(TestVL53L1X, DistanceAndTimingBudget)
+TEST_F(TestVL53L1X, DistanceAndTimingBudget)
 {
     SCOPED_TRACE(ustr);
 
@@ -175,15 +190,25 @@ TEST_P(TestVL53L1X, DistanceAndTimingBudget)
                 EXPECT_TRUE(unit->readDistanceMode(dd));
                 EXPECT_EQ(d, dd);
                 EXPECT_EQ(d, unit->distanceMode());
+                // Verify TB is preserved after distance mode change
+                Timing tb_after{};
+                EXPECT_TRUE(unit->readTimingBudget(tb_after));
+                EXPECT_EQ(tb, tb_after) << "TB changed after writeDistanceMode";
             }
         }
     }
 
-    // IMP
+    // IMP (register read/write roundtrip only)
+    // Datasheet requires IMP >= timing_budget + 4ms, but writeInterMeasurementPeriod()
+    // does not enforce this constraint. The normal API path (begin() and
+    // startPeriodicMeasurement(dist, tb)) always sets IMP from interval_table[tb],
+    // which satisfies the constraint by design.
     {
         uint32_t cnt{32};
         while (cnt--) {
-            uint16_t ms = rng() % 0xFFFF;
+            uint16_t ms = esp_random() % 0xFFFF;
+            auto s      = m5::utility::formatString("IMP:%u", ms);
+            SCOPED_TRACE(s);
             EXPECT_TRUE(unit->writeInterMeasurementPeriod(ms)) << ms;
             uint16_t v{};
             EXPECT_TRUE(unit->readInterMeasurementPeriod(v)) << ms;
@@ -197,7 +222,7 @@ TEST_P(TestVL53L1X, DistanceAndTimingBudget)
     }
 }
 
-TEST_P(TestVL53L1X, Reset)
+TEST_F(TestVL53L1X, Reset)
 {
     SCOPED_TRACE(ustr);
 
@@ -256,7 +281,7 @@ TEST_P(TestVL53L1X, Reset)
     EXPECT_NE(456U, xtalk);
 }
 
-TEST_P(TestVL53L1X, SingleShot)
+TEST_F(TestVL53L1X, SingleShot)
 {
     SCOPED_TRACE(ustr);
 
@@ -287,7 +312,7 @@ TEST_P(TestVL53L1X, SingleShot)
     }
 }
 
-TEST_P(TestVL53L1X, ROI)
+TEST_F(TestVL53L1X, ROI)
 {
     SCOPED_TRACE(ustr);
 
@@ -297,7 +322,9 @@ TEST_P(TestVL53L1X, ROI)
                 EXPECT_FALSE(unit->writeROI(w, h));
                 continue;
             }
-            uint8_t c = rng() & 0xFF;
+            uint8_t c = esp_random() & 0xFF;
+            auto sc   = m5::utility::formatString("ROI Center:0x%02X W:%u H:%u", c, w, h);
+            SCOPED_TRACE(sc);
             EXPECT_TRUE(unit->writeROICenter(c));
             uint8_t c2{};
             EXPECT_TRUE(unit->readROICenter(c2));
@@ -319,16 +346,19 @@ TEST_P(TestVL53L1X, ROI)
     }
 }
 
-TEST_P(TestVL53L1X, Window)
+TEST_F(TestVL53L1X, Window)
 {
     SCOPED_TRACE(ustr);
 
     for (auto&& w : window_table) {
         uint16_t low{}, high{};
         do {
-            low  = rng() & 0xFFFF;
-            high = rng() & 0xFFFF;
+            low  = esp_random() & 0xFFFF;
+            high = esp_random() & 0xFFFF;
         } while (!(high > low && low > 0 && high > 0));
+
+        auto sw = m5::utility::formatString("Window:%u Low:%u High:%u", m5::stl::to_underlying(w), low, high);
+        SCOPED_TRACE(sw);
 
         EXPECT_TRUE(unit->writeDistanceThreshold(w, low, high));
         Window w2{};
@@ -354,7 +384,7 @@ TEST_P(TestVL53L1X, Window)
     }
 }
 
-TEST_P(TestVL53L1X, Periodic)
+TEST_F(TestVL53L1X, Periodic)
 {
     SCOPED_TRACE(ustr);
 
@@ -373,7 +403,12 @@ TEST_P(TestVL53L1X, Periodic)
             EXPECT_TRUE(unit->startPeriodicMeasurement(d, tb));
             EXPECT_TRUE(unit->inPeriodic());
 
-            test_periodic_measurement(unit.get(), 4, 11);
+            {
+                auto r = collect_periodic_measurements(unit.get(), 4);
+                EXPECT_FALSE(r.timed_out);
+                EXPECT_EQ(r.update_count, 4U);
+                EXPECT_LE(r.median(), r.expected_interval + 11);
+            }
 
             EXPECT_TRUE(unit->stopPeriodicMeasurement());
             EXPECT_FALSE(unit->inPeriodic());
@@ -407,7 +442,7 @@ TEST_P(TestVL53L1X, Periodic)
     }
 }
 
-TEST_P(TestVL53L1X, ChageI2CAddress)
+TEST_F(TestVL53L1X, ChangeI2CAddress)
 {
     SCOPED_TRACE(ustr);
 
@@ -439,4 +474,12 @@ TEST_P(TestVL53L1X, ChageI2CAddress)
     EXPECT_TRUE(unit->readI2CAddress(addr));
     EXPECT_EQ(addr, +UnitVL53L1X::DEFAULT_ADDRESS);
     EXPECT_EQ(unit->address(), +UnitVL53L1X::DEFAULT_ADDRESS);
+
+    // Verify softReset restores default address
+    EXPECT_TRUE(unit->changeI2CAddress(0x10));
+    EXPECT_EQ(unit->address(), 0x10);
+    EXPECT_TRUE(unit->softReset());
+    EXPECT_EQ(unit->address(), +UnitVL53L1X::DEFAULT_ADDRESS);
+    EXPECT_TRUE(unit->readI2CAddress(addr));
+    EXPECT_EQ(addr, +UnitVL53L1X::DEFAULT_ADDRESS);
 }

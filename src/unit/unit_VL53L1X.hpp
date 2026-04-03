@@ -42,7 +42,7 @@ enum class Distance : int8_t {
 
 /*!
   @enum Timing
-  @brief Timeing budget for ranging
+  @brief Timing budget for ranging
   @warning This value does not directly represent the measurement interval
   @warning inter-measurement period needs to be set
 */
@@ -147,7 +147,7 @@ public:
       @brief Settings for begin
      */
     struct config_t {
-        //! Operatiing condition
+        //! Operating condition
         vl53l1x::Operating operating{vl53l1x::Operating::Condition2V8};
         //! Distance mode
         vl53l1x::Distance distance{vl53l1x::Distance::Long};
@@ -155,12 +155,14 @@ public:
         vl53l1x::Timing timing_budget{vl53l1x::Timing::Budget100ms};
         //! Start periodic measurement on begin?
         bool start_periodic{true};
-        //! Caliblate offset if start on begin
+        //! Calibrate offset if start on begin
         bool calibrate_offset{false};
-        //! Caliblate crosstalk if start on begin
+        //! Calibrate crosstalk if start on begin
         bool calibrate_xtalk{false};
     };
 
+    //! @brief Constructor
+    //! @param addr I2C address
     explicit UnitVL53L1X(const uint8_t addr = DEFAULT_ADDRESS)
         : Component(addr), _data{new m5::container::CircularBuffer<vl53l1x::Data>(1)}
     {
@@ -172,17 +174,19 @@ public:
     {
     }
 
+    //! @brief Begin communication with the sensor
     virtual bool begin() override;
+    //! @brief Update periodic measurement data
     virtual void update(const bool force = false) override;
 
     ///@name Settings for begin
     ///@{
-    /*! @brief Gets the configration */
+    /*! @brief Gets the configuration */
     inline config_t config() const
     {
         return _cfg;
     }
-    //! @brief Set the configration
+    //! @brief Set the configuration
     inline void config(const config_t& cfg)
     {
         _cfg = cfg;
@@ -266,12 +270,12 @@ public:
     ///@{
     /*!
       @brief Measurement single shot in the current settings
-      @param[out] data Measuerd data
+      @param[out] data Measured data
       @return True if successful
       @warning During periodic detection runs, an error is returned
       @warning Processing is blocked until results are returned
     */
-    bool measureSingleshot(vl53l1x::Data& d);
+    bool measureSingleshot(vl53l1x::Data& data);
     ///@}
 
     /*!
@@ -288,6 +292,7 @@ public:
     bool writeDistanceMode(const vl53l1x::Distance d);
 
     //! @brief Software reset
+    //! @return True if successful
     bool softReset();
 
     ///@name Offset
@@ -365,7 +370,7 @@ public:
       @brief Write the inter-measurement period(IMP)
       @param ms period (ms)
       @return True if successful
-      @warning The IMP must gerater than or equal to the TB otherwise the actual IMP is double the expected value
+      @warning The IMP must greater than or equal to the TB otherwise the actual IMP is double the expected value
     */
     bool writeInterMeasurementPeriod(const uint16_t ms);
     ///@}
@@ -379,13 +384,13 @@ public:
     */
     bool readDistanceThresholdWindow(vl53l1x::Window& window);
     /*!
-      @brief Read the lower distance threshould
+      @brief Read the lower distance threshold
       @param[out] mm distance (mm)
       @return True if successful
     */
     bool readDistanceThresholdLow(uint16_t& mm);
     /*!
-      @brief Read the higher distance threshould
+      @brief Read the higher distance threshold
       @param[out] mm distance (mm)
       @return True if successful
     */
@@ -394,7 +399,7 @@ public:
       @brief Write the threshold and window detection mode
       @param window window mode
       @param low lower distance threshold (mm)
-      @param high lower distance threshold (mm)
+      @param high higher distance threshold (mm)
       @return True if successful
     */
     bool writeDistanceThreshold(const vl53l1x::Window window, const uint16_t low, const uint16_t high);
@@ -409,7 +414,7 @@ public:
     ///@}
 
     /*!
-      ROI coodinate
+      ROI coordinate
       @verbatim
       128,136,144,152,160,168,176,184,   192,200,208,216,224,232,240,248
       129,137,145,153,161,169,177,185,   193,201,209,217,225,233,241,249
@@ -463,12 +468,12 @@ public:
     bool writeROICenter(const uint8_t center);
     ///@}
 
-    ///@warning Handling warning
+    ///@warning Changing the I2C address persists until the device is power-cycled or soft-reset
     ///@name I2C Address
     ///@{
     /*!
       @brief Read the I2C address
-      @param i2c_address[out] I2C address
+      @param[out] i2c_address I2C address
       @return True if successful
      */
     bool readI2CAddress(uint8_t& i2c_address);
@@ -542,10 +547,10 @@ constexpr uint16_t DSS_CONFIG_APERTURE_ATTENUATION                              
 constexpr uint16_t MM_CONFIG_TIMEOUT_MACROP_A                                   {0x005A};
 constexpr uint16_t MM_CONFIG_TIMEOUT_MACROP_B                                   {0x005C};
 constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_A                                {0x005E};
-constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_A_HI                             {0x005E};
+constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_A_HI                             {0x005E};  // Alias of _A (ULD naming)
 constexpr uint16_t RANGE_CONFIG_VCSEL_PERIOD_A                                  {0x0060};
 constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_B                                {0x0061};
-constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_B_HI                             {0x0061};
+constexpr uint16_t RANGE_CONFIG_TIMEOUT_MACROP_B_HI                             {0x0061};  // Alias of _B (ULD naming)
 constexpr uint16_t RANGE_CONFIG_VCSEL_PERIOD_B                                  {0x0063};
 constexpr uint16_t RANGE_CONFIG_SIGMA_THRESH                                    {0x0064};
 constexpr uint16_t RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT_MCPS                   {0x0066};

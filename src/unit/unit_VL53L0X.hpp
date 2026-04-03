@@ -93,7 +93,7 @@ public:
       @brief Settings for begin
      */
     struct config_t {
-        //! Operatiing condition
+        //! Operating condition
         vl53l0x::Operating operating{vl53l0x::Operating::Condition2V8};
         //! Operation mode
         vl53l0x::Mode mode{vl53l0x::Mode::LongRange};
@@ -101,6 +101,8 @@ public:
         bool start_periodic{true};
     };
 
+    //! @brief Constructor
+    //! @param addr I2C address
     explicit UnitVL53L0X(const uint8_t addr = DEFAULT_ADDRESS)
         : Component(addr), _data{new m5::container::CircularBuffer<vl53l0x::Data>(1)}
     {
@@ -112,17 +114,19 @@ public:
     {
     }
 
+    //! @brief Begin communication with the sensor
     virtual bool begin() override;
+    //! @brief Update periodic measurement data
     virtual void update(const bool force = false) override;
 
     ///@name Settings for begin
     ///@{
-    /*! @brief Gets the configration */
+    /*! @brief Gets the configuration */
     inline config_t config() const
     {
         return _cfg;
     }
-    //! @brief Set the configration
+    //! @brief Set the configuration
     inline void config(const config_t& cfg)
     {
         _cfg = cfg;
@@ -151,7 +155,7 @@ public:
     }
     ///@}
 
-    ///@Properties
+    ///@name Properties
     ///@{
     /*!
       @brief Gets the inner mode
@@ -195,15 +199,16 @@ public:
     ///@{
     /*!
       @brief Measurement single shot in the current settings
-      @param[out] data Measuerd data
+      @param[out] data Measured data
       @return True if successful
       @warning During periodic detection runs, an error is returned
       @warning Processing is blocked until results are returned
     */
-    bool measureSingleshot(vl53l0x::Data& d);
+    bool measureSingleshot(vl53l0x::Data& data);
     ///@}
 
     //! @brief Software reset
+    //! @return True if successful
     bool softReset();
 
     /*!
@@ -229,12 +234,12 @@ public:
     bool writeSignalRateLimit(const float mcps);
     ///@}
 
-    ///@warning Handling warning
+    ///@warning Changing the I2C address persists until the device is power-cycled or soft-reset
     ///@name I2C Address
     ///@{
     /*!
       @brief Read the I2C address
-      @param i2c_address[out] I2C address
+      @param[out] i2c_address I2C address
       @return True if successful
      */
     bool readI2CAddress(uint8_t& i2c_address);
@@ -285,7 +290,7 @@ constexpr uint8_t SYSTEM_INTERRUPT_CLEAR{0x0B};
 constexpr uint8_t RESULT_INTERRUPT_STATUS{0x13};
 constexpr uint8_t RESULT_RANGE_STATUS{0x14};
 constexpr uint8_t RESULT_RANGE_STATUS_RESULT{0x1E};
-constexpr uint8_t ALGO_PHASECAL_CONFIG_TIMEOUT{0x30};
+constexpr uint8_t ALGO_PHASECAL_CONFIG_TIMEOUT{0x30};  // Bank 0
 constexpr uint8_t GLOBAL_CONFIG_VCSEL_WIDTH{0x32};
 constexpr uint8_t FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT{0x44};
 constexpr uint8_t MSRC_CONFIG_TIMEOUT_MACROP{0x46};
@@ -297,6 +302,7 @@ constexpr uint8_t PRE_RANGE_CONFIG_VALID_PHASE_LOW{0x56};
 constexpr uint8_t PRE_RANGE_CONFIG_VALID_PHASE_HIGH{0x57};
 constexpr uint8_t MSRC_CONFIG_CONTROL{0x60};
 
+constexpr uint8_t FINAL_RANGE_CONFIG_VCSEL_PERIOD{0x70};
 constexpr uint8_t FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI{0x71};
 constexpr uint8_t GPIO_HV_MUX_ACTIVE_HIGH{0x84};
 constexpr uint8_t I2C_SLAVE_DEVICE_ADDRESS{0x8A};
@@ -304,7 +310,7 @@ constexpr uint8_t VHV_CONFIG_PAD_SCL_SDA_EXTSUP_HV{0x89};
 constexpr uint8_t SOFT_RESET{0xBF};
 constexpr uint8_t MODEL_ID{0xC0};
 
-constexpr uint8_t ALGO_PHASECAL_LIM{0x30};
+constexpr uint8_t ALGO_PHASECAL_LIM{0x30};  // Bank 1 (via 0xFF=0x01)
 }  // namespace command
 }  // namespace vl53l0x
 ///@endcond

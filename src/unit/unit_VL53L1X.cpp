@@ -20,10 +20,10 @@ constexpr uint8_t VALID_MODEL_ID{0xEA};
 constexpr uint8_t VALID_MODULE_TYPE{0xCC};
 
 enum class SystemMode : uint8_t {
-    RangeSingleShort = 0x10,
-    RangeBackToBack  = 0x20,
-    RangeTimed       = 0x40,
-    RangeAbort       = 0x80,
+    RangeSingleShot = 0x10,
+    RangeBackToBack = 0x20,
+    RangeTimed      = 0x40,
+    RangeAbort      = 0x80,
 };
 
 constexpr uint16_t default_values_start{0x2D};
@@ -164,7 +164,7 @@ bool UnitVL53L1X::begin()
 
     // Operating condition
     if (!write_operating_condition(_cfg.operating)) {
-        M5_LIB_LOGE("Failed to write_oOperation_condition");
+        M5_LIB_LOGE("Failed to write_operating_condition");
         return false;
     }
 
@@ -183,11 +183,11 @@ bool UnitVL53L1X::begin()
         if (!writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01) ||
             !writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeAbort)) ||
             !writeRegister8(VHV_CONFIG_TIMEOUT_MACROP_LOOP_BOUND, 0x09) || !writeRegister8(VHV_CONFIG_INIT, 0x00)) {
-            M5_LIB_LOGE("Failed to initialize prodcess");
+            M5_LIB_LOGE("Failed to initialize process");
             return false;
         }
     } else {
-        M5_LIB_LOGE("Failed to initialize prodcess");
+        M5_LIB_LOGE("Failed to initialize process");
         return false;
     }
 
@@ -274,9 +274,9 @@ bool UnitVL53L1X::stop_periodic_measurement()
     return false;
 }
 
-bool UnitVL53L1X::measureSingleshot(vl53l1x::Data& d)
+bool UnitVL53L1X::measureSingleshot(vl53l1x::Data& data)
 {
-    d = {};
+    data = {};
 
     if (inPeriodic()) {
         M5_LIB_LOGD("Periodic measurements are running");
@@ -284,11 +284,11 @@ bool UnitVL53L1X::measureSingleshot(vl53l1x::Data& d)
     }
 
     if (writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01) &&
-        writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeSingleShort))) {
+        writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeSingleShot))) {
         auto timeout_at = m5::utility::millis() + _interval * 2;
         do {
             if (read_data_ready_status()) {
-                return read_measurement(d);
+                return read_measurement(data);
             }
         } while (m5::utility::millis() <= timeout_at);
     }
@@ -297,10 +297,16 @@ bool UnitVL53L1X::measureSingleshot(vl53l1x::Data& d)
 
 bool UnitVL53L1X::softReset()
 {
-    if (soft_reset()) {
-        _distance = Distance::Unknown;
-        _periodic = false;
-        return wait_booted() && write_default_values();
+    // Reset command to current address, then switch to default before resume
+    if (writeRegister8(SOFT_RESET, 0x00)) {
+        changeAddress(DEFAULT_ADDRESS);  // Sensor reverts to default address after reset
+        m5::utility::delay(1);
+        if (writeRegister8(SOFT_RESET, 0x01)) {  // resume at default address
+            m5::utility::delay(1);
+            _distance = Distance::Unknown;
+            _periodic = false;
+            return wait_booted() && write_default_values();
+        }
     }
     return false;
 }
@@ -412,7 +418,10 @@ bool UnitVL53L1X::writeDistanceMode(const Distance d)
             default:
                 break;
         }
-        if (ret && (tb != Timing::BudgetUnknown) ? write_timing_budget(tb, d) : true) {
+        if (ret) {
+            if (tb != Timing::BudgetUnknown && !write_timing_budget(tb, d)) {
+                return false;
+            }
             _distance = d;
             return true;
         }
@@ -424,8 +433,9 @@ bool UnitVL53L1X::calibrateOffset(int16_t& offset, const uint16_t targetmm)
 {
     offset = 0;
 
-    if (!writeRegister8(ALGO_PART_TO_PART_RANGE_OFFSET_MM, 0x00) || !writeRegister8(MM_CONFIG_INNER_OFFSET_MM, 0x00) ||
-        !writeRegister8(MM_CONFIG_OUTER_OFFSET_MM, 0x00)) {
+    if (!writeRegister16BE(ALGO_PART_TO_PART_RANGE_OFFSET_MM, 0x0000) ||
+        !writeRegister16BE(MM_CONFIG_INNER_OFFSET_MM, 0x0000) ||
+        !writeRegister16BE(MM_CONFIG_OUTER_OFFSET_MM, 0x0000)) {
         return false;
     }
 
@@ -454,7 +464,7 @@ bool UnitVL53L1X::calibrateOffset(int16_t& offset, const uint16_t targetmm)
             return false;
         }
         M5_LIB_LOGV("tgt:%u avg(%u):%u", targetmm, avg_count, avg / avg_count);
-        offset = targetmm - (avg / avg_count);
+        offset = static_cast<int16_t>(static_cast<int32_t>(targetmm) - static_cast<int32_t>(avg / avg_count));
         return writeOffset(offset);
     }
     return false;
@@ -469,7 +479,7 @@ bool UnitVL53L1X::readOffset(int16_t& offset)
         if (v & 0x0400) {  // Sign extension
             v |= 0xFC00;
         }
-        offset = (int16_t)v;
+        offset = static_cast<int16_t>(v);
         return true;
     }
     return false;
@@ -477,7 +487,7 @@ bool UnitVL53L1X::readOffset(int16_t& offset)
 
 bool UnitVL53L1X::writeOffset(const int16_t offset)
 {
-    uint16_t tmp = (uint16_t)offset;
+    uint16_t tmp = static_cast<uint16_t>(offset);
 
     // check range
     if (offset > 1023 || offset < -1024) {
@@ -495,7 +505,7 @@ bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
     float avg{}, avg_signal_rate{}, avg_spad{};
     uint_fast8_t avg_count{}, avg_signal_rate_count{}, avg_spad_count{};
 
-    if (writeRegister8(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, 0x00) &&
+    if (writeRegister16BE(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, 0x0000) &&
         writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeTimed))) {
         uint32_t cnt{50};
         while (cnt--) {
@@ -534,7 +544,10 @@ bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
         M5_LIB_LOGV("tgt:%u avg(%u):%f sr(%u):%f spad(%u):%f", targetmm, avg_count, avg, avg_signal_rate_count,
                     avg_signal_rate, avg_spad_count, avg_spad);
 
-        uint32_t tmp = (uint16_t)(512 * (avg_signal_rate * (1 - (avg / targetmm))) / avg_spad);
+        if (targetmm == 0 || avg_spad == 0.f) {
+            return false;
+        }
+        uint32_t tmp = static_cast<uint32_t>(512 * (avg_signal_rate * (1 - (avg / targetmm))) / avg_spad);
 
         if (tmp > 65535) {
             tmp = 65535;
@@ -542,18 +555,11 @@ bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
         // tmp *= 1000;
         // tmp >>= 9;
         // xtalk = tmp;
-        xtalk = (uint16_t)((tmp * 1000) >> 9);
+        xtalk = static_cast<uint16_t>((tmp * 1000) >> 9);
         M5_LIB_LOGV("%x -> %u", tmp, xtalk);
         return writeXtalk(xtalk);
     }
     return false;
-}
-
-float fixed_7_9_to_float(uint16_t fixed_value)
-{
-    int16_t integer_part  = fixed_value >> 9;
-    float fractional_part = (fixed_value & 0x01FF) / 512.0f;
-    return integer_part + fractional_part;
 }
 
 bool UnitVL53L1X::readXtalk(uint16_t& xtalk)
@@ -572,7 +578,7 @@ bool UnitVL53L1X::writeXtalk(const uint16_t xtalk)
 {
     return writeRegister16BE(ALGO_CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS, 0x0000) &&
            writeRegister16BE(ALGO_CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS, 0x0000) &&
-           // convert to kiro cps by fixed 7.9
+           // convert to kilo cps by fixed 7.9
            writeRegister16BE(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, (xtalk << 9) / 1000);
 }
 
@@ -630,9 +636,9 @@ bool UnitVL53L1X::write_timing_budget(const Timing tb, const Distance dist)
     }
 
     if (writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_A_HI,
-                          tb_table[m5::stl::to_underlying(_distance)][m5::stl::to_underlying(tb)][0]) &&
+                          tb_table[m5::stl::to_underlying(dist)][m5::stl::to_underlying(tb)][0]) &&
         writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_B_HI,
-                          tb_table[m5::stl::to_underlying(_distance)][m5::stl::to_underlying(tb)][1])) {
+                          tb_table[m5::stl::to_underlying(dist)][m5::stl::to_underlying(tb)][1])) {
         _tb = tb;
         return true;
     }
@@ -647,7 +653,7 @@ bool UnitVL53L1X::readInterMeasurementPeriod(uint16_t& ms)
     if (readRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, tmp32, 0) &&
         readRegister16BE(RESULT_OSC_CALIBRATE_VAL, cpll, 0)) {
         cpll &= 0x3FF;
-        ms = (uint16_t)(tmp32 / (cpll * 1.065f) + 0.5f);
+        ms = static_cast<uint16_t>(tmp32 / (cpll * 1.065f) + 0.5f);
         return true;
     }
     return false;
@@ -659,7 +665,7 @@ bool UnitVL53L1X::writeInterMeasurementPeriod(const uint16_t ms)
     if (readRegister16BE(RESULT_OSC_CALIBRATE_VAL, cpll, 0)) {
         cpll &= 0x3FF;
 
-        uint32_t tmp32 = (uint32_t)(cpll * ms * 1.065f);
+        uint32_t tmp32 = static_cast<uint32_t>(cpll * ms * 1.065f);
 
         if (writeRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, tmp32)) {
             _interval = ms;
@@ -731,7 +737,7 @@ bool UnitVL53L1X::readROICenter(uint8_t& center)
 bool UnitVL53L1X::writeROI(const uint8_t wid, const uint8_t hgt)
 {
     if (wid < 4 || wid > 16 || hgt < 4 || hgt > 16) {
-        M5_LIB_LOGE("Invalid reagen width/heght.(valid between 4 and 16)  %u,%u", wid, hgt);
+        M5_LIB_LOGE("Invalid region width/height.(valid between 4 and 16)  %u,%u", wid, hgt);
         return false;
     }
 

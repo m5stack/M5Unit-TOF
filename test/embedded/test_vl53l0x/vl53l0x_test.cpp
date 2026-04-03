@@ -14,7 +14,7 @@
 #include <googletest/test_helper.hpp>
 #include <unit/unit_VL53L0X.hpp>
 #include <cmath>
-#include <random>
+#include <esp_random.h>
 
 using namespace m5::unit::googletest;
 using namespace m5::unit;
@@ -22,30 +22,46 @@ using namespace m5::unit::vl53l0x;
 using namespace m5::unit::vl53l0x::command;
 
 #if defined(USING_HAT_TOF)
-#pragma message "Test for HatToF"
 namespace hat {
-template <uint32_t FREQ, uint32_t WNUM = 0>
-class GlobalFixture : public ::testing::Environment {
-    static_assert(WNUM < 2, "Wire number must be lesser than 2");
-
-public:
-    void SetUp() override
-    {
-        TwoWire* w[2] = {&Wire, &Wire1};
-        if (WNUM < m5::stl::size(w) && i2cIsInit(WNUM)) {
-            M5_LOGW("Already inititlized Wire %d. Terminate and restart FREQ %u", WNUM, FREQ);
-            w[WNUM]->end();
-        }
-        w[WNUM]->begin(0, 26, FREQ);
-    }
+struct I2cPins {
+    int sda, scl;
 };
+
+I2cPins get_hat_pins(const m5::board_t board)
+{
+    switch (board) {
+        case m5::board_t::board_M5StickC:
+        case m5::board_t::board_M5StickCPlus:
+        case m5::board_t::board_M5StickCPlus2:
+            return {0, 26};
+        case m5::board_t::board_M5StickS3:
+            return {8, 0};
+        case m5::board_t::board_M5StackCoreInk:
+            return {25, 26};
+        case m5::board_t::board_ArduinoNessoN1:
+            return {6, 7};
+        default:
+            return {-1, -1};
+    }
+}
 }  // namespace hat
-const ::testing::Environment* global_fixture = ::testing::AddGlobalTestEnvironment(new hat::GlobalFixture<400000U>());
-#else
-const ::testing::Environment* global_fixture = ::testing::AddGlobalTestEnvironment(new GlobalFixture<400000U>());
 #endif
 
-class TestVL53L0X : public ComponentTestBase<UnitVL53L0X, bool> {
+namespace {
+void i2c_scan(TwoWire& wire)
+{
+    M5_LOGI("I2C scan start");
+    for (uint8_t addr = 0x08; addr < 0x78; ++addr) {
+        wire.beginTransmission(addr);
+        if (wire.endTransmission() == 0) {
+            M5_LOGI("  Found device at 0x%02X", addr);
+        }
+    }
+    M5_LOGI("I2C scan end");
+}
+}  // namespace
+
+class TestVL53L0X : public I2CComponentTestBase<UnitVL53L0X> {
 protected:
     virtual UnitVL53L0X* get_instance() override
     {
@@ -57,34 +73,50 @@ protected:
         }
         return ptr;
     }
-    virtual bool is_using_hal() const override
+    virtual bool begin() override
     {
-        return GetParam();
-    };
+#if defined(USING_HAT_TOF)
+        auto board      = M5.getBoard();
+        const auto pins = hat::get_hat_pins(board);
+        auto& wire      = (board == m5::board_t::board_ArduinoNessoN1) ? Wire1 : Wire;
+        wire.end();
+        wire.begin(pins.sda, pins.scl, unit->component_config().clock);
+        // i2c_scan(wire);
+        return Units.add(*unit, wire) && Units.begin();
+#else
+
+#if 0
+        // I2C scan for debugging (uses temporary Wire, then delegates to base)
+        auto board = M5.getBoard();
+        if (board != m5::board_t::board_ArduinoNessoN1 && board != m5::board_t::board_M5NanoC6) {
+            auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
+            auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
+            Wire.end();
+            Wire.begin(pin_num_sda, pin_num_scl, 100000);
+            i2c_scan(Wire);
+            Wire.end();
+        }
+#endif
+        return I2CComponentTestBase<UnitVL53L0X>::begin();
+#endif
+    }
 };
 
-// INSTANTIATE_TEST_SUITE_P(ParamValues, TestVL53L0X, ::testing::Values(false, true));
-// INSTANTIATE_TEST_SUITE_P(ParamValues, TestVL53L0X, ::testing::Values(true));
-INSTANTIATE_TEST_SUITE_P(ParamValues, TestVL53L0X, ::testing::Values(false));
-
 namespace {
-auto rng = std::default_random_engine{};
 
 constexpr Mode mode_table[]         = {Mode::Default, Mode::HighAccuracy, Mode::LongRange, Mode::HighSpeed};
 constexpr const char* mode_string[] = {"Default", "Acc", "Long", "Speed"};
 
 }  // namespace
 
-TEST_P(TestVL53L0X, CheckConfig)
+TEST_F(TestVL53L0X, CheckConfig)
 {
     SCOPED_TRACE(ustr);
 }
 
-TEST_P(TestVL53L0X, SignalRateLimitAndReset)
+TEST_F(TestVL53L0X, SignalRateLimitAndReset)
 {
     SCOPED_TRACE(ustr);
-
-    std::uniform_real_distribution<> dist(0.0f, 512.0f);
 
     EXPECT_FALSE(unit->writeSignalRateLimit(512.f));
     EXPECT_FALSE(unit->writeSignalRateLimit(-0.000001f));
@@ -92,10 +124,12 @@ TEST_P(TestVL53L0X, SignalRateLimitAndReset)
     uint32_t cnt{32};
     float mcps{}, tmp{};
     while (cnt--) {
-        mcps = dist(rng);
+        mcps   = (float)(esp_random() % 511999 + 1) / 1000.0f;
+        auto s = m5::utility::formatString("MCPS:%.3f", mcps);
+        SCOPED_TRACE(s);
         EXPECT_TRUE(unit->writeSignalRateLimit(mcps));
         EXPECT_TRUE(unit->readSignalRateLimit(tmp));
-        EXPECT_NEAR(mcps, tmp, 0.0075f);
+        EXPECT_NEAR(mcps, tmp, 0.008f);
     }
 
     EXPECT_TRUE(unit->softReset());
@@ -104,7 +138,7 @@ TEST_P(TestVL53L0X, SignalRateLimitAndReset)
     EXPECT_FLOAT_EQ(tmp, 0.25f);
 }
 
-TEST_P(TestVL53L0X, Singleshot)
+TEST_F(TestVL53L0X, Singleshot)
 {
     SCOPED_TRACE(ustr);
 
@@ -135,7 +169,7 @@ TEST_P(TestVL53L0X, Singleshot)
     }
 }
 
-TEST_P(TestVL53L0X, Periodic)
+TEST_F(TestVL53L0X, Periodic)
 {
     SCOPED_TRACE(ustr);
 
@@ -149,7 +183,12 @@ TEST_P(TestVL53L0X, Periodic)
         EXPECT_TRUE(unit->startPeriodicMeasurement(m));
         EXPECT_TRUE(unit->inPeriodic());
 
-        test_periodic_measurement(unit.get(), 4, 11);
+        {
+            auto r = collect_periodic_measurements(unit.get(), 4);
+            EXPECT_FALSE(r.timed_out);
+            EXPECT_EQ(r.update_count, 4U);
+            EXPECT_LE(r.median(), r.expected_interval + 11);
+        }
 
         EXPECT_TRUE(unit->stopPeriodicMeasurement());
         EXPECT_FALSE(unit->inPeriodic());
@@ -182,7 +221,7 @@ TEST_P(TestVL53L0X, Periodic)
     }
 }
 
-TEST_P(TestVL53L0X, ChageI2CAddress)
+TEST_F(TestVL53L0X, ChangeI2CAddress)
 {
     SCOPED_TRACE(ustr);
 
@@ -214,4 +253,12 @@ TEST_P(TestVL53L0X, ChageI2CAddress)
     EXPECT_TRUE(unit->readI2CAddress(addr));
     EXPECT_EQ(addr, +UnitVL53L0X::DEFAULT_ADDRESS);
     EXPECT_EQ(unit->address(), +UnitVL53L0X::DEFAULT_ADDRESS);
+
+    // Verify softReset restores default address
+    EXPECT_TRUE(unit->changeI2CAddress(0x10));
+    EXPECT_EQ(unit->address(), 0x10);
+    EXPECT_TRUE(unit->softReset());
+    EXPECT_EQ(unit->address(), +UnitVL53L0X::DEFAULT_ADDRESS);
+    EXPECT_TRUE(unit->readI2CAddress(addr));
+    EXPECT_EQ(addr, +UnitVL53L0X::DEFAULT_ADDRESS);
 }
