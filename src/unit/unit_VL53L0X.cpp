@@ -16,7 +16,7 @@ using namespace m5::unit::vl53l0x;
 using namespace m5::unit::vl53l0x::command;
 
 // User-defined literals "_u8"
-constexpr uint8_t operator"" _u8(unsigned long long v)
+constexpr uint8_t operator""_u8(unsigned long long v)
 {
     return static_cast<uint8_t>(v);
 }
