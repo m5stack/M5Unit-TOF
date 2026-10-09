@@ -76,7 +76,9 @@ constexpr RangeStatus range_status_table[16] = {
     RangeStatus::Unknown,         RangeStatus::Unknown,         RangeStatus::Unknown,
     RangeStatus::Unknown};
 
-constexpr uint32_t interval_table[] = {30, 200, 33, 20};
+// Period of timed ranging for each mode. It must not be shorter than the timing budget of the mode,
+// or every other period is skipped (Default ranges in about 31 ms)
+constexpr uint32_t interval_table[] = {33, 200, 33, 20};
 
 }  // namespace
 
@@ -257,7 +259,8 @@ bool UnitVL53L0X::start_periodic_measurement()
 
     if (writeRegister8(0x80_u8, 0x01) && writeRegister8(0xFF_u8, 0x01) && writeRegister8(0x00_u8, 0x00) &&
         writeRegister8(0x91_u8, _stop) && writeRegister8(0x00_u8, 0x01) && writeRegister8(0xFF_u8, 0x00) &&
-        writeRegister8(0x80_u8, 0x00) && writeRegister8(SYSTEM_RANGE_START, 0x02) &&  // 0x04?
+        writeRegister8(0x80_u8, 0x00) &&
+        writeRegister8(SYSTEM_RANGE_START, 0x04) &&  // Timed: ranges every SYSTEM_INTERMEASUREMENT_PERIOD
         writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01)) {
         _latest   = 0;
         _periodic = true;
@@ -367,8 +370,11 @@ bool UnitVL53L0X::writeMode(const vl53l0x::Mode mode)
             break;
     }
     if (ret) {
-        auto it = interval_table[m5::stl::to_underlying(mode)];
-        if (writeRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, it)) {
+        // As ST VL53L0X_SetInterMeasurementPeriodMilliSeconds(): the period is in oscillator counts
+        const auto it = interval_table[m5::stl::to_underlying(mode)];
+        uint16_t osc{};
+        if (readRegister16BE(OSC_CALIBRATE_VAL, osc, 0) &&
+            writeRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, osc ? it * osc : it)) {
             _interval = it;
             _mode     = mode;
             return true;

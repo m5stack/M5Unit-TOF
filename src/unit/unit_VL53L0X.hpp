@@ -34,7 +34,7 @@ enum class Operating : uint8_t {
  */
 enum class Mode : int8_t {
     Unknown = -1,  //!< Unknown (not set)
-    Default,       //!< interval 30ms  (limited to 1.2m)
+    Default,       //!< interval 33ms  (limited to 1.2m)
     HighAccuracy,  //!< interval 200ms (limited to 1.2m)
     LongRange,     //!< interval 33ms  (limited to 2.0m)
     HighSpeed,     //!< interval 20ms  (limited to 1.2m)
@@ -296,6 +296,7 @@ namespace command {
 constexpr uint8_t SYSTEM_RANGE_START{0x00};
 constexpr uint8_t SYSTEM_SEQUENCE_CONFIG{0x01};
 constexpr uint8_t SYSTEM_INTERMEASUREMENT_PERIOD{0x04};
+constexpr uint8_t OSC_CALIBRATE_VAL{0xF8};
 constexpr uint8_t SYSTEM_INTERRUPT_CONFIG_GPIO{0x0A};
 constexpr uint8_t SYSTEM_INTERRUPT_CLEAR{0x0B};
 constexpr uint8_t RESULT_INTERRUPT_STATUS{0x13};
