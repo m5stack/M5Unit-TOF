@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 /*
-  Example using M5UnitUnified for UnitToF/UnitToF4M/HatToF
+  Example using M5UnitUnified for UnitToF/UnitToF4M/HatToF/UnitToF90
 */
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
@@ -16,13 +16,13 @@
 // Choose one define symbol to match the unit you are using
 // *************************************************************
 #if !defined(USING_UNIT_TOF) && !defined(USING_UNIT_TOF4M) && !defined(USING_HAT_TOF) && !defined(USING_UNIT_TOF90)
-// For UnitToF
+// For UnitToF (U010)
 // #define USING_UNIT_TOF
-// For UnitToF4M
+// For UnitToF4M (U172)
 // #define USING_UNIT_TOF4M
-// For HatToF
+// For HatToF (U072)
 // #define USING_HAT_TOF
-// For UnitToF90
+// For UnitToF90 (U196)
 // #define USING_UNIT_TOF90
 #endif
 
@@ -116,6 +116,7 @@ void setup()
     }
 }
 
+namespace {
 // Behavior when BtnA is clicked changes depending on the value
 constexpr int32_t BTN_A_FUNCTION{0};
 
@@ -137,7 +138,8 @@ void button_function()
             unit.stopPeriodicMeasurement();
             m5::unit::vl53l1x::Data d{};
             if (unit.measureSingleshot(d)) {
-                M5.Log.printf("Singleshot[%d]: >Range:%d\nStatus:%u\n", sscnt, d.range(), d.range_status());
+                M5.Log.printf("Singleshot[%u]: >Range:%d\nStatus:%u\n", sscnt, d.range(),
+                              static_cast<unsigned>(m5::stl::to_underlying(d.range_status())));
             } else {
                 M5_LOGE("Failed to measure");
             }
@@ -148,14 +150,14 @@ void button_function()
             }
         } break;
         case 1: {  // Change window mode
-            M5.Log.printf("Change Window:%u\n", w_table[idx]);
+            M5.Log.printf("Change Window:%u\n", static_cast<unsigned>(m5::stl::to_underlying(w_table[idx])));
             unit.writeDistanceThreshold(w_table[idx], 200 /*20cm*/, 400 /*40cm*/);
             if (++idx >= m5::stl::size(w_table)) {
                 idx = 0;
             }
         } break;
         case 2: {  // Change interval
-            M5.Log.printf("Change interval %u", tb_table[idx]);
+            M5.Log.printf("Change interval %d\n", static_cast<int>(m5::stl::to_underlying(tb_table[idx])));
             unit.stopPeriodicMeasurement();
             unit.startPeriodicMeasurement(Distance::Short, tb_table[idx]);
             if (++idx >= m5::stl::size(tb_table)) {
@@ -191,7 +193,8 @@ void button_function()
             unit.stopPeriodicMeasurement();
             m5::unit::vl53l0x::Data d{};
             if (unit.measureSingleshot(d)) {
-                M5.Log.printf("Singleshot[%d]: >Range:%d\nStatus:%u\n", sscnt, d.range(), d.range_status());
+                M5.Log.printf("Singleshot[%u]: >Range:%d\nStatus:%u\n", sscnt, d.range(),
+                              static_cast<unsigned>(m5::stl::to_underlying(d.range_status())));
             } else {
                 M5_LOGE("Failed to measure");
             }
@@ -206,6 +209,8 @@ void button_function()
     }
 }
 #endif
+
+}  // namespace
 
 void loop()
 {
@@ -232,7 +237,15 @@ void loop()
         button_function();
     } else if (M5.BtnA.wasHold()) {
         M5.Log.printf("Reset!\n");
-        unit.softReset();
+        if (unit.softReset()) {
+#if defined(USING_UNIT_TOF4M)
+            unit.startPeriodicMeasurement(unit.config().distance);
+#else
+            unit.startPeriodicMeasurement(unit.config().mode);
+#endif
+        } else {
+            M5_LOGE("Failed to reset");
+        }
     }
 }
 
