@@ -315,14 +315,18 @@ bool UnitVL53L1X::softReset()
 
 bool UnitVL53L1X::soft_reset()
 {
-    if (writeRegister8(SOFT_RESET, 0x00)) {  // reset
-        m5::utility::delay(1);
-        if (writeRegister8(SOFT_RESET, 0x01)) {  // resume
-            m5::utility::delay(1);               // need delay
-            return true;
-        }
+    // The reset reverts the I2C address to the default: resume there, then restore the address in use
+    const uint8_t addr = address();
+    if (!writeRegister8(SOFT_RESET, 0x00)) {  // reset
+        return false;
     }
-    return false;
+    changeAddress(DEFAULT_ADDRESS);
+    m5::utility::delay(1);
+    if (!writeRegister8(SOFT_RESET, 0x01)) {  // resume
+        return false;
+    }
+    m5::utility::delay(1);  // need delay
+    return addr == DEFAULT_ADDRESS || (wait_booted() && changeI2CAddress(addr));
 }
 
 bool UnitVL53L1X::wait_booted()

@@ -114,7 +114,11 @@ public:
     {
     }
 
-    //! @brief Begin communication with the sensor
+    /*!
+      @brief Begin communication with the sensor
+      @details Resets the sensor, then restores the I2C address in use if it was changed
+      @warning The reset is resumed at the default address (0x29). Do not call it while another sensor still uses 0x29
+    */
     virtual bool begin() override;
     //! @brief Update periodic measurement data
     virtual void update(const bool force = false) override;
@@ -207,8 +211,13 @@ public:
     bool measureSingleshot(vl53l0x::Data& data);
     ///@}
 
-    //! @brief Software reset
-    //! @return True if successful
+    /*!
+      @brief Software reset
+      @return True if successful
+      @note The sensor reverts to the default I2C address (0x29), and so does this instance
+      @note To reset while keeping the changed address, call begin() instead
+      @warning The reset is resumed at 0x29. Do not call it while another sensor still uses 0x29
+    */
     bool softReset();
 
     /*!
@@ -268,6 +277,7 @@ protected:
 
     bool soft_reset();
     bool wait_model_id(const bool resumed);
+    bool restore_i2c_address(const uint8_t addr);
 
     bool write_default_settings();
 

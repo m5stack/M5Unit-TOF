@@ -23,6 +23,8 @@ constexpr uint8_t operator""_u8(unsigned long long v)
 
 namespace {
 constexpr uint8_t VALID_MODEL_ID{0xEE};
+// Wait after MODEL_ID is valid on resume (datasheet tBOOT 1.2 ms max, with margin)
+constexpr uint32_t BOOT_WAIT_MS{2};
 
 // specific steps in the sequence
 constexpr uint8_t RANGE_SEQUENCE_STEP_MSRC{0x04};
@@ -461,11 +463,36 @@ bool UnitVL53L0X::softReset()
 
 bool UnitVL53L0X::soft_reset()
 {
-    return writeRegister8(SOFT_RESET, 0x00) && wait_model_id(false) &&  // reset
-           writeRegister8(SOFT_RESET, 0x01) && wait_model_id(true);     // resume
+    // The reset reverts the I2C address to the default: resume there, then restore the address in use
+    const uint8_t addr = address();
+    if (!writeRegister8(SOFT_RESET, 0x00)) {  // reset
+        return false;
+    }
+    changeAddress(DEFAULT_ADDRESS);
+    if (!wait_model_id(false) || !writeRegister8(SOFT_RESET, 0x01) || !wait_model_id(true)) {  // resume
+        return false;
+    }
+    return addr == DEFAULT_ADDRESS || restore_i2c_address(addr);
 }
 
-// As ST VL53L0X_ResetDevice(): MODEL_ID reads 0 while in reset, and the valid ID after resume
+// The address written while the firmware is still booting is ignored: write it until the device answers there
+bool UnitVL53L0X::restore_i2c_address(const uint8_t addr)
+{
+    constexpr uint32_t TIMEOUT_MS{100};
+    const auto start_at = m5::utility::millis();
+    do {
+        uint8_t v{};
+        if (changeI2CAddress(addr) && readRegister8(MODEL_ID, v, 0) && v == VALID_MODEL_ID) {
+            return true;
+        }
+        changeAddress(DEFAULT_ADDRESS);
+        m5::utility::delay(1);
+    } while (!m5::utility::hasElapsed(start_at, TIMEOUT_MS));
+    M5_LIB_LOGE("Failed to restore the I2C address %02X", addr);
+    return false;
+}
+
+// As ST VL53L0X_ResetDevice(): MODEL_ID reads 0 while in reset, and the valid ID after resume (then wait for the boot)
 bool UnitVL53L0X::wait_model_id(const bool resumed)
 {
     constexpr uint32_t TIMEOUT_MS{100};
@@ -474,6 +501,9 @@ bool UnitVL53L0X::wait_model_id(const bool resumed)
         uint8_t v{0xFF};
         const bool read = readRegister8(MODEL_ID, v, 0);
         if (resumed ? (read && v == VALID_MODEL_ID) : (!read || v == 0x00)) {
+            if (resumed) {
+                m5::utility::delay(BOOT_WAIT_MS);  // The firmware is still booting (datasheet tBOOT 1.2 ms max)
+            }
             return true;
         }
         m5::utility::delay(1);

@@ -568,23 +568,23 @@ TEST_F(TestVL53L1X, ChangeI2CAddress)
     EXPECT_FALSE(unit->changeI2CAddress(0x07));  // Invalid
     EXPECT_FALSE(unit->changeI2CAddress(0x78));  // Invalid
 
-    // Change to 0x10
-    EXPECT_TRUE(unit->changeI2CAddress(0x10));
+    // Change to 0x0A (addresses unused by M5 products: docs.m5stack.com/en/product_i2c_addr)
+    EXPECT_TRUE(unit->changeI2CAddress(0x0A));
     EXPECT_TRUE(unit->readI2CAddress(addr));
-    EXPECT_EQ(addr, 0x10);
-    EXPECT_EQ(unit->address(), 0x10);
+    EXPECT_EQ(addr, 0x0A);
+    EXPECT_EQ(unit->address(), 0x0A);
 
-    // Change to 0x77
-    EXPECT_TRUE(unit->changeI2CAddress(0x77));
+    // Change to 0x74
+    EXPECT_TRUE(unit->changeI2CAddress(0x74));
     EXPECT_TRUE(unit->readI2CAddress(addr));
-    EXPECT_EQ(addr, 0x77);
-    EXPECT_EQ(unit->address(), 0x77);
+    EXPECT_EQ(addr, 0x74);
+    EXPECT_EQ(unit->address(), 0x74);
 
-    // Change to 0x52
-    EXPECT_TRUE(unit->changeI2CAddress(0x52));
+    // Change to 0x5B
+    EXPECT_TRUE(unit->changeI2CAddress(0x5B));
     EXPECT_TRUE(unit->readI2CAddress(addr));
-    EXPECT_EQ(addr, 0x52);
-    EXPECT_EQ(unit->address(), 0x52);
+    EXPECT_EQ(addr, 0x5B);
+    EXPECT_EQ(unit->address(), 0x5B);
 
     // Change to default
     EXPECT_TRUE(unit->changeI2CAddress(UnitVL53L1X::DEFAULT_ADDRESS));
@@ -593,10 +593,31 @@ TEST_F(TestVL53L1X, ChangeI2CAddress)
     EXPECT_EQ(unit->address(), +UnitVL53L1X::DEFAULT_ADDRESS);
 
     // Verify softReset restores default address
-    EXPECT_TRUE(unit->changeI2CAddress(0x10));
-    EXPECT_EQ(unit->address(), 0x10);
+    EXPECT_TRUE(unit->changeI2CAddress(0x0A));
+    EXPECT_EQ(unit->address(), 0x0A);
     EXPECT_TRUE(unit->softReset());
     EXPECT_EQ(unit->address(), +UnitVL53L1X::DEFAULT_ADDRESS);
     EXPECT_TRUE(unit->readI2CAddress(addr));
     EXPECT_EQ(addr, +UnitVL53L1X::DEFAULT_ADDRESS);
+}
+
+// begin() resets the sensor, which reverts its I2C address to the default; begin() must keep the address in use
+TEST_F(TestVL53L1X, BeginAfterChangeI2CAddress)
+{
+    SCOPED_TRACE(ustr);
+
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->changeI2CAddress(0x2A));
+    EXPECT_TRUE(unit->begin());
+    EXPECT_EQ(unit->address(), 0x2A);
+
+    uint8_t addr{};
+    EXPECT_TRUE(unit->readI2CAddress(addr));
+    EXPECT_EQ(addr, 0x2A);
+
+    Data d{};
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->measureSingleshot(d));
+
+    EXPECT_TRUE(unit->changeI2CAddress(UnitVL53L1X::DEFAULT_ADDRESS));
 }
