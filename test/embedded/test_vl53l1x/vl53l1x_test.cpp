@@ -460,6 +460,13 @@ TEST_F(TestVL53L1X, ROI)
             }
         }
     }
+
+    // A smaller ROI written after a large one keeps the center set by the large one (199)
+    EXPECT_TRUE(unit->writeROI(16, 16));
+    EXPECT_TRUE(unit->writeROI(4, 4));
+    uint8_t center{};
+    EXPECT_TRUE(unit->readROICenter(center));
+    EXPECT_EQ(center, 199);
 }
 
 TEST_F(TestVL53L1X, Window)
