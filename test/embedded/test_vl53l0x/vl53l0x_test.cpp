@@ -13,7 +13,10 @@
 #include <googletest/test_template.hpp>
 #include <googletest/test_helper.hpp>
 #include <unit/unit_VL53L0X.hpp>
+#include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <string>
 #include <esp_random.h>
 
 using namespace m5::unit::googletest;
@@ -107,6 +110,61 @@ namespace {
 constexpr Mode mode_table[]         = {Mode::Default, Mode::HighAccuracy, Mode::LongRange, Mode::HighSpeed};
 constexpr const char* mode_string[] = {"Default", "Acc", "Long", "Speed"};
 
+// Number of single-shot measurements per mode
+constexpr size_t SINGLESHOT_COUNT{32};
+// Tests named *WithTarget need a matte object placed at this distance in front of the sensor.
+// They FAIL (not skip) without it, so that a forgotten object is noticed.
+constexpr uint16_t TARGET_DISTANCE_MM{140};
+
+// "status:range" of each measurement, for failure messages
+std::string describe(const std::vector<vl53l0x::Data>& results)
+{
+    std::string s;
+    for (auto&& r : results) {
+        char buf[16]{};
+        snprintf(buf, sizeof(buf), "%u:%d ", static_cast<unsigned>(m5::stl::to_underlying(r.range_status())),
+                 r.range());
+        s += buf;
+    }
+    return s;
+}
+
+std::vector<vl53l0x::Data> measure_singleshots(UnitVL53L0X* unit)
+{
+    std::vector<vl53l0x::Data> results;
+    vl53l0x::Data data{};
+    size_t cnt{SINGLESHOT_COUNT};
+    while (cnt--) {
+        EXPECT_TRUE(unit->measureSingleshot(data));
+        results.push_back(data);
+    }
+    return results;
+}
+
+// Without a target: every measurement completes and the sensor reports no hardware failure
+void check_singleshot_results(const std::vector<vl53l0x::Data>& results)
+{
+    EXPECT_EQ(results.size(), SINGLESHOT_COUNT);
+    EXPECT_TRUE(std::none_of(results.begin(), results.end(), [](const vl53l0x::Data& r) {
+        return r.range_status() == vl53l0x::RangeStatus::HardwareFailure;
+    })) << describe(results);
+}
+
+// With a target: judged by the status, not by the value changing (a stable target can give the same value)
+// - At least half of them must be valid
+// - A valid measurement must not report 0 mm (it does when the object is too close or glossy; use a matte object)
+void check_singleshot_results_with_target(const std::vector<vl53l0x::Data>& results)
+{
+    EXPECT_EQ(results.size(), SINGLESHOT_COUNT);
+    const auto valid_count =
+        std::count_if(results.begin(), results.end(), [](const vl53l0x::Data& r) { return r.valid(); });
+    EXPECT_GE(static_cast<size_t>(valid_count) * 2, results.size())
+        << "No target? Place a matte object " << TARGET_DISTANCE_MM << " mm away. " << describe(results);
+    EXPECT_TRUE(
+        std::all_of(results.begin(), results.end(), [](const vl53l0x::Data& r) { return !r.valid() || r.range() > 0; }))
+        << "0 mm while valid: object too close or glossy? " << describe(results);
+}
+
 }  // namespace
 
 TEST_F(TestVL53L0X, CheckConfig)
@@ -148,24 +206,22 @@ TEST_F(TestVL53L0X, Singleshot)
     EXPECT_FALSE(unit->inPeriodic());
 
     for (auto&& m : mode_table) {
-        std::vector<uint16_t> results;
-
         SCOPED_TRACE(mode_string[m5::stl::to_underlying(m)]);
-
         EXPECT_TRUE(unit->writeMode(m));
+        check_singleshot_results(measure_singleshots(unit.get()));
+    }
+}
 
-        uint32_t cnt{32};
-        while (cnt--) {
-            EXPECT_TRUE(unit->measureSingleshot(d));
-            results.push_back(d.range());
-        }
+// NOTICE: Needs a matte object placed TARGET_DISTANCE_MM in front of the sensor
+TEST_F(TestVL53L0X, SingleshotWithTarget)
+{
+    SCOPED_TRACE(ustr);
 
-        EXPECT_FALSE(results.empty());
-        EXPECT_EQ(results.size(), 32U);
-        if (!results.empty()) {
-            uint16_t v = results.front();
-            EXPECT_FALSE(std::all_of(results.begin(), results.end(), [&v](const uint16_t x) { return x == v; })) << v;
-        }
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    for (auto&& m : mode_table) {
+        SCOPED_TRACE(mode_string[m5::stl::to_underlying(m)]);
+        EXPECT_TRUE(unit->writeMode(m));
+        check_singleshot_results_with_target(measure_singleshots(unit.get()));
     }
 }
 
