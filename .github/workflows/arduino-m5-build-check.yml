@@ -2,7 +2,7 @@ name: Build(arduino-m5stack)
 
 env:
   SKETCH_NAMES_FIND_START: ./examples/UnitUnified
-  REQUIRED_LIBRARIES: M5Unified,M5UnitUnified
+  REQUIRED_LIBRARIES: M5Unified,M5UnitUnified,M5Unit-HUB
 
 on:
   push:
@@ -156,6 +156,13 @@ jobs:
             archi: esp32
             platform-version: 3.3.9
             board: m5stack_stickc_plus2
+          # ViaPaHub
+          - sketch: ViaPaHub
+            platform-url: https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/arduino/package_m5stack_index.json
+            platform: m5stack
+            archi: esp32
+            platform-version: 3.3.9
+            board: m5stack_core
 
     steps:
       - name: Checkout

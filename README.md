@@ -49,6 +49,16 @@ See also examples using conventional methods here.
 
 - [M5Unit-TOF - MIT](LICENSE)
 
+## Support via [PaHub](https://docs.m5stack.com/en/unit/Unit-PaHub%20v2.1)
+
+|Unit|Support|Note|
+|---|---|---|
+|UnitToF|OK||
+|UnitToF4M|OK||
+|UnitToF90|OK||
+
+UnitToF / UnitToF4M / UnitToF90 all use the same address (0x29), so connect them to different PaHub channels to use them together.
+See also [examples/UnitUnified/ViaPaHub](examples/UnitUnified/ViaPaHub) and [M5Unit-HUB](https://github.com/m5stack/M5Unit-HUB)
 
 ## Examples
 See also [examples/UnitUnified](examples/UnitUnified)

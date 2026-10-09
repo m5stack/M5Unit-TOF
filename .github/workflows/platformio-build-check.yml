@@ -119,6 +119,11 @@ jobs:
             board: NessoN1
             framework: Arduino
             espressif32: latest
+          # ViaPaHub
+          - example: ViaPaHub
+            board: Core
+            framework: Arduino
+            espressif32: latest
 
     steps:
       - name: Checkout
