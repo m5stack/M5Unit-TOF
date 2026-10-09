@@ -131,7 +131,13 @@ bool UnitVL53L1X::begin()
 
     // Check unit
     uint8_t model_id{}, module_type{};
-    readRegister8(MODEL_ID, model_id, 0);
+    if (readRegister8(MODEL_ID, model_id, 0) && model_id == 0x00) {
+        // Held in reset (e.g. a previous reset was not resumed): resume it
+        M5_LIB_LOGW("Held in reset, resume it");
+        if (writeRegister8(SOFT_RESET, 0x01) && wait_booted()) {
+            readRegister8(MODEL_ID, model_id, 0);
+        }
+    }
     readRegister8(MODULE_TYPE, module_type, 0);
     if (model_id != VALID_MODEL_ID || module_type != VALID_MODULE_TYPE) {
         M5_LIB_LOGE("This unit is NOT VL53L1X %x/%x", model_id, module_type);

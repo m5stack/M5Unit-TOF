@@ -621,3 +621,17 @@ TEST_F(TestVL53L1X, BeginAfterChangeI2CAddress)
 
     EXPECT_TRUE(unit->changeI2CAddress(UnitVL53L1X::DEFAULT_ADDRESS));
 }
+
+// begin() resumes a sensor held in reset (a reset whose resume was not written, e.g. by an interrupted program)
+TEST_F(TestVL53L1X, BeginResumesHeldReset)
+{
+    SCOPED_TRACE(ustr);
+
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->writeRegister8(m5::unit::vl53l1x::command::SOFT_RESET, 0x00));
+    EXPECT_TRUE(unit->begin());
+
+    Data d{};
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->measureSingleshot(d));
+}
