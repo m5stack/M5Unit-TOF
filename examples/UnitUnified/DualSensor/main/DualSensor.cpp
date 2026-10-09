@@ -9,9 +9,8 @@
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
 #include <M5UnitUnifiedTOF.h>
-#include <M5HAL.hpp>
 #include <M5Utility.h>
-#include <Wire.h>
+#include <wiring/m5_unit_unified_wiring.hpp>  // Board-aware connection helpers (include last)
 
 namespace {
 auto& lcd = M5.Display;
@@ -26,28 +25,6 @@ m5::unit::HatToF hat;
 
 constexpr uint32_t hat_color{0xCC66FFU};  // Lavender
 constexpr uint32_t unit_color{TFT_ORANGE};
-
-struct HatPins {
-    int sda, scl;
-};
-
-HatPins get_hat_pins(const m5::board_t board)
-{
-    switch (board) {
-        case m5::board_t::board_M5StickC:
-        case m5::board_t::board_M5StickCPlus:
-        case m5::board_t::board_M5StickCPlus2:
-            return {0, 26};
-        case m5::board_t::board_M5StickS3:
-            return {8, 0};
-        case m5::board_t::board_M5StackCoreInk:
-            return {25, 26};
-        case m5::board_t::board_ArduinoNessoN1:
-            return {6, 7};
-        default:
-            return {-1, -1};
-    }
-}
 
 bool has_lcd{};
 
@@ -159,16 +136,11 @@ void setup()
     M5.begin(m5cfg);
     M5.setTouchButtonHeightByRatio(100);
 
-    const auto board_type = M5.getBoard();
-
-    const auto pins = get_hat_pins(board_type);
-    M5_LOGI("getHatPin: SDA:%d SCL:%d", pins.sda, pins.scl);
-    if (pins.sda < 0 || pins.scl < 0) {
+    const auto hat_pins = m5::unit::wiring::hatI2CPins();
+    M5_LOGI("getHatPin: SDA:%d SCL:%d", hat_pins.sda, hat_pins.scl);
+    if (hat_pins.sda < 0 || hat_pins.scl < 0) {
         M5_LOGE("Unsupported board for DualSensor");
-        lcd.fillScreen(TFT_RED);
-        while (true) {
-            m5::utility::delay(10000);
-        }
+        m5::unit::wiring::failStop();
     }
 
     // The screen shall be in landscape mode
@@ -176,56 +148,25 @@ void setup()
         lcd.setRotation(1);
     }
 
-    // HatToF settings
+    // HatToF: NessoN1 uses Wire1 (Wire is used internally, GROVE is on SoftwareI2C)
+    //         Other boards use SoftwareI2C (Wire is used by the unit on GROVE)
     bool hat_ready{};
-    if (board_type == m5::board_t::board_ArduinoNessoN1) {
-        // Using Wire1
-        Wire1.end();
-        Wire1.begin(pins.sda, pins.scl, 400 * 1000U);
-        hat_ready = Units.add(hat, Wire1);
+    if (hat_pins.useWire1) {
+        hat_ready = m5::unit::wiring::addHatI2C(Units, hat);
     } else {
-        // SoftwareI2C for Hat
-        m5::hal::bus::I2CBusConfig hat_i2c_cfg;
-        hat_i2c_cfg.pin_sda = m5::hal::gpio::getPin(pins.sda);
-        hat_i2c_cfg.pin_scl = m5::hal::gpio::getPin(pins.scl);
-        auto hat_i2c_bus    = m5::hal::bus::i2c::getBus(hat_i2c_cfg);
-        hat_ready           = Units.add(hat, hat_i2c_bus ? hat_i2c_bus.value() : nullptr);
+        hat_ready = m5::unit::wiring::i2cSoftware(Units, hat, hat_pins.sda, hat_pins.scl);
     }
 
-    // UnitToF settings
-    auto pin_num_sda = M5.getPin(m5::pin_name_t::port_a_sda);
-    auto pin_num_scl = M5.getPin(m5::pin_name_t::port_a_scl);
-    bool unit_ready{};
-    if (board_type == m5::board_t::board_ArduinoNessoN1) {
-        // For NessoN1 GROVE
-        // Wire is used internally, so SoftwareI2C handles the unit
-        pin_num_sda = M5.getPin(m5::pin_name_t::port_b_out);
-        pin_num_scl = M5.getPin(m5::pin_name_t::port_b_in);
-        M5_LOGI("getPin(NessoN1): SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
-        m5::hal::bus::I2CBusConfig i2c_cfg;
-        i2c_cfg.pin_sda = m5::hal::gpio::getPin(pin_num_sda);
-        i2c_cfg.pin_scl = m5::hal::gpio::getPin(pin_num_scl);
-        auto i2c_bus    = m5::hal::bus::i2c::getBus(i2c_cfg);
-        M5_LOGI("Bus:%d", i2c_bus.has_value());
-        unit_ready = Units.add(unit, i2c_bus ? i2c_bus.value() : nullptr);
-    } else {
-        // UnitToF/ToF4M/ToF90 on Wire
-        M5_LOGI("getPin: SDA:%u SCL:%u", pin_num_sda, pin_num_scl);
-        Wire.end();
-        Wire.begin(pin_num_sda, pin_num_scl, 400 * 1000U);
-        unit_ready = Units.add(unit, Wire);
-    }
+    // UnitToF/ToF4M/ToF90 on GROVE (board-aware: NessoN1 -> SoftwareI2C, others -> Wire)
+    const bool unit_ready = m5::unit::wiring::addI2C(Units, unit);
 
     if (!hat_ready || !unit_ready || !Units.begin()) {
         M5_LOGE("Failed to begin %u/%u", hat_ready, unit_ready);
         M5_LOGE("%s", Units.debugInfo().c_str());
-        lcd.fillScreen(TFT_RED);
-        while (true) {
-            m5::utility::delay(10000);
-        }
+        m5::unit::wiring::failStop();
     }
 
-    M5_LOGI("M5UnitUnified has been begun");
+    M5_LOGI("M5UnitUnified initialized");
     M5_LOGI("%s", Units.debugInfo().c_str());
 
     // Display setup (skip for no-LCD or EPD devices)
