@@ -57,8 +57,8 @@ float number_scale{1.0f};  // Text size of the range
 float label_scale{1.0f};   // Text size of the function state
 int16_t last_range{-1};
 bool redraw{true};
-const char* notice{};     // Shown instead of the range for a while (e.g. after reset)
-uint32_t notice_until{};  // Time to hide the notice (ms)
+const char* notice{};                     // Shown instead of the range for a while (e.g. after reset)
+m5::utility::elapsed_time_t notice_at{};  // When the notice was shown (ms)
 
 }  // namespace
 
@@ -303,9 +303,9 @@ void reset_unit()
     } else {
         M5_LOGE("Failed to reset");
     }
-    notice       = success ? "RESET" : "FAILED";
-    notice_until = m5::utility::millis() + 1000;
-    redraw       = true;
+    notice    = success ? "RESET" : "FAILED";
+    notice_at = m5::utility::millis();
+    redraw    = true;
 }
 
 void handle_button()
@@ -358,7 +358,7 @@ void loop()
 
     handle_button();
 
-    if (notice && m5::utility::millis() >= notice_until) {
+    if (notice && m5::utility::hasElapsed(notice_at, 1000)) {
         notice = nullptr;
         redraw = true;
     }
