@@ -449,9 +449,8 @@ bool UnitVL53L0X::softReset()
     // Reset command to current address, then switch to default before resume
     if (writeRegister8(SOFT_RESET, 0x00)) {
         changeAddress(DEFAULT_ADDRESS);  // Sensor reverts to default address after reset
-        m5::utility::delay(1);
-        if (writeRegister8(SOFT_RESET, 0x01)) {  // resume at default address
-            m5::utility::delay(1);
+        if (wait_model_id(false) && writeRegister8(SOFT_RESET, 0x01) &&
+            wait_model_id(true)) {  // resume at default address
             _mode     = Mode::Unknown;
             _periodic = false;
             return write_default_settings();
@@ -462,13 +461,24 @@ bool UnitVL53L0X::softReset()
 
 bool UnitVL53L0X::soft_reset()
 {
-    if (writeRegister8(SOFT_RESET, 0x00)) {  // reset
-        m5::utility::delay(1);
-        if (writeRegister8(SOFT_RESET, 0x01)) {  // resume
-            m5::utility::delay(1);               // need delay
+    return writeRegister8(SOFT_RESET, 0x00) && wait_model_id(false) &&  // reset
+           writeRegister8(SOFT_RESET, 0x01) && wait_model_id(true);     // resume
+}
+
+// As ST VL53L0X_ResetDevice(): MODEL_ID reads 0 while in reset, and the valid ID after resume
+bool UnitVL53L0X::wait_model_id(const bool resumed)
+{
+    constexpr uint32_t TIMEOUT_MS{100};
+    const auto start_at = m5::utility::millis();
+    do {
+        uint8_t v{0xFF};
+        const bool read = readRegister8(MODEL_ID, v, 0);
+        if (resumed ? (read && v == VALID_MODEL_ID) : (!read || v == 0x00)) {
             return true;
         }
-    }
+        m5::utility::delay(1);
+    } while (!m5::utility::hasElapsed(start_at, TIMEOUT_MS));
+    M5_LIB_LOGE("Timeout waiting for the %s", resumed ? "resume" : "reset");
     return false;
 }
 

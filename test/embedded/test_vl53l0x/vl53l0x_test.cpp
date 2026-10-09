@@ -206,6 +206,30 @@ TEST_F(TestVL53L0X, SignalRateLimitAndReset)
     EXPECT_FLOAT_EQ(tmp, 0.25f);
 }
 
+// The reset waits for MODEL_ID (as ST VL53L0X_ResetDevice), so repeated resets must not fail
+TEST_F(TestVL53L0X, RepeatedReset)
+{
+    SCOPED_TRACE(ustr);
+
+    constexpr uint32_t REPEAT{20};
+    for (uint32_t i = 0; i < REPEAT; ++i) {
+        SCOPED_TRACE(i);
+        EXPECT_TRUE(unit->stopPeriodicMeasurement());
+        EXPECT_TRUE(unit->begin());
+    }
+    for (uint32_t i = 0; i < REPEAT; ++i) {
+        SCOPED_TRACE(i);
+        EXPECT_TRUE(unit->softReset());
+        float mcps{};
+        EXPECT_TRUE(unit->readSignalRateLimit(mcps));
+        EXPECT_FLOAT_EQ(mcps, 0.25f);
+    }
+
+    Data d{};
+    EXPECT_FALSE(unit->inPeriodic());
+    EXPECT_TRUE(unit->measureSingleshot(d));
+}
+
 TEST_F(TestVL53L0X, Singleshot)
 {
     SCOPED_TRACE(ustr);

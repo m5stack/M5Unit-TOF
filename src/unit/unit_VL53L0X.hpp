@@ -267,6 +267,7 @@ protected:
     bool write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t final_pclk);
 
     bool soft_reset();
+    bool wait_model_id(const bool resumed);
 
     bool write_default_settings();
 
