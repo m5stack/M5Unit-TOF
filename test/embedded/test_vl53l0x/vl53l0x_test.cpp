@@ -51,6 +51,7 @@ I2cPins get_hat_pins(const m5::board_t board)
 #endif
 
 namespace {
+#if 0  // For debugging
 void i2c_scan(TwoWire& wire)
 {
     M5_LOGI("I2C scan start");
@@ -62,6 +63,7 @@ void i2c_scan(TwoWire& wire)
     }
     M5_LOGI("I2C scan end");
 }
+#endif
 }  // namespace
 
 class TestVL53L0X : public I2CComponentTestBase<UnitVL53L0X> {
@@ -81,7 +83,11 @@ protected:
 #if defined(USING_HAT_TOF)
         auto board      = M5.getBoard();
         const auto pins = hat::get_hat_pins(board);
-        auto& wire      = (board == m5::board_t::board_ArduinoNessoN1) ? Wire1 : Wire;
+        if (pins.sda < 0 || pins.scl < 0) {
+            M5_LOGE("Unsupported board for HatToF");
+            return false;
+        }
+        auto& wire = (board == m5::board_t::board_ArduinoNessoN1) ? Wire1 : Wire;
         wire.end();
         wire.begin(pins.sda, pins.scl, unit->component_config().clock);
         // i2c_scan(wire);
@@ -167,9 +173,13 @@ void check_singleshot_results_with_target(const std::vector<vl53l0x::Data>& resu
 
 }  // namespace
 
-TEST_F(TestVL53L0X, CheckConfig)
+TEST_F(TestVL53L0X, BeginAppliesConfig)
 {
     SCOPED_TRACE(ustr);
+
+    const auto cfg = unit->config();
+    EXPECT_EQ(unit->inPeriodic(), cfg.start_periodic);
+    EXPECT_EQ(unit->mode(), cfg.mode);
 }
 
 TEST_F(TestVL53L0X, SignalRateLimitAndReset)
@@ -208,6 +218,7 @@ TEST_F(TestVL53L0X, Singleshot)
     for (auto&& m : mode_table) {
         SCOPED_TRACE(mode_string[m5::stl::to_underlying(m)]);
         EXPECT_TRUE(unit->writeMode(m));
+        EXPECT_EQ(unit->mode(), m);
         check_singleshot_results(measure_singleshots(unit.get()));
     }
 }

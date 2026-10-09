@@ -25,6 +25,7 @@ using namespace m5::unit::vl53l1x;
 using namespace m5::unit::vl53l1x::command;
 
 namespace {
+#if 0  // For debugging
 void i2c_scan(TwoWire& wire)
 {
     M5_LOGI("I2C scan start");
@@ -36,6 +37,7 @@ void i2c_scan(TwoWire& wire)
     }
     M5_LOGI("I2C scan end");
 }
+#endif
 }  // namespace
 
 class TestVL53L1X : public I2CComponentTestBase<UnitVL53L1X> {
@@ -137,9 +139,22 @@ void check_singleshot_results_with_target(const std::vector<vl53l1x::Data>& resu
 
 }  // namespace
 
-TEST_F(TestVL53L1X, CheckConfig)
+TEST_F(TestVL53L1X, BeginAppliesConfig)
 {
     SCOPED_TRACE(ustr);
+
+    const auto cfg = unit->config();
+    EXPECT_EQ(unit->inPeriodic(), cfg.start_periodic);
+
+    Distance d{};
+    EXPECT_TRUE(unit->readDistanceMode(d));
+    EXPECT_EQ(d, cfg.distance);
+    EXPECT_EQ(unit->distanceMode(), cfg.distance);
+
+    Timing tb{};
+    EXPECT_TRUE(unit->readTimingBudget(tb));
+    EXPECT_EQ(tb, cfg.timing_budget);
+    EXPECT_EQ(unit->timingBudget(), cfg.timing_budget);
 }
 
 TEST_F(TestVL53L1X, Offset)
@@ -204,14 +219,15 @@ TEST_F(TestVL53L1X, CalibrationWithTarget)
         << "No target? Place a matte object " << TARGET_DISTANCE_MM << " mm away";
     EXPECT_TRUE(unit->readOffset(offset2));
     EXPECT_EQ(offset, offset2);
-    EXPECT_TRUE(unit->writeOffset(0));
 
+    // UM2510: calibrate the crosstalk with the offset applied
     uint16_t xtalk{}, xtalk2{};
     EXPECT_TRUE(unit->calibrateXtalk(xtalk, TARGET_DISTANCE_MM))
         << "No target? Place a matte object " << TARGET_DISTANCE_MM << " mm away";
     EXPECT_TRUE(unit->readXtalk(xtalk2));
     EXPECT_EQ((xtalk << 9) / 1000, (xtalk2 << 9) / 1000) << xtalk << "/" << xtalk2;
     EXPECT_TRUE(unit->writeXtalk(0));
+    EXPECT_TRUE(unit->writeOffset(0));
 }
 
 // Long mode cannot use the 15 ms budget: the change must be rejected before any register is written
@@ -239,7 +255,7 @@ TEST_F(TestVL53L1X, DistanceAndTimingBudget)
 {
     SCOPED_TRACE(ustr);
 
-    // distance -> tb loop
+    // For each distance mode, write every timing budget
     for (auto&& d : distance_table) {
         Distance dd{};
         EXPECT_TRUE(unit->writeDistanceMode(d));
@@ -262,7 +278,7 @@ TEST_F(TestVL53L1X, DistanceAndTimingBudget)
         }
     }
 
-    // tb -> distance loop;
+    // For each timing budget, change the distance mode and check the budget is kept
     for (auto&& tb : tb_table) {
         Timing tb2{};
         // to short
@@ -300,7 +316,7 @@ TEST_F(TestVL53L1X, DistanceAndTimingBudget)
     {
         uint32_t cnt{32};
         while (cnt--) {
-            uint16_t ms = esp_random() % 0xFFFF;
+            uint16_t ms = esp_random() & 0xFFFF;
             auto s      = m5::utility::formatString("IMP:%u", ms);
             SCOPED_TRACE(s);
             EXPECT_TRUE(unit->writeInterMeasurementPeriod(ms)) << ms;
@@ -489,7 +505,8 @@ TEST_F(TestVL53L1X, Periodic)
 
     for (auto&& d : distance_table) {
         for (auto&& tb : tb_table) {
-            auto s = m5::utility::formatString("Dis:%u TB:%u", d, tb);
+            auto s = m5::utility::formatString("Dis:%d TB:%d", static_cast<int>(m5::stl::to_underlying(d)),
+                                               static_cast<int>(m5::stl::to_underlying(tb)));
             SCOPED_TRACE(s.c_str());
             if (d == Distance::Long && tb == Timing::Budget15ms) {
                 continue;
