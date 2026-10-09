@@ -6,6 +6,8 @@
 /*
   Example of using M5UnitUnified to connect both UnitToF and HatToF
 */
+#include <type_traits>
+
 #include <M5Unified.h>
 #include <M5UnitUnified.h>
 #include <M5UnitUnifiedTOF.h>
@@ -23,6 +25,9 @@ m5::unit::UnitToF unit;
 //  ------
 m5::unit::HatToF hat;
 
+// Display range of the GROVE unit (UnitToF4M measures up to 4 m)
+constexpr int32_t unit_max_range{std::is_same<decltype(unit), m5::unit::UnitToF4M>::value ? 4000 : 2000};
+
 constexpr uint32_t hat_color{0xCC66FFU};   // Lavender
 constexpr uint32_t unit_color{0xFFB400U};  // Orange (RGB888)
 
@@ -35,13 +40,20 @@ public:
     {
         _sprite.setPsram(false);
         _sprite.setColorDepth(1);
-        _w      = dst.width();
-        _h      = dst.height() >> 1;
-        has_lcd = _sprite.createSprite(_w, _h);
-        _sprite.setPaletteColor(0, TFT_BLACK);
-        _sprite.setPaletteColor(1, color);
-        _sprite.setTextColor(1, 0);
-        _sprite.fillSprite(0);
+        _w     = dst.width();
+        _h     = dst.height() >> 1;
+        _valid = _sprite.createSprite(_w, _h);
+        if (_valid) {
+            _sprite.setPaletteColor(0, TFT_BLACK);
+            _sprite.setPaletteColor(1, color);
+            _sprite.setTextColor(1, 0);
+            _sprite.fillSprite(0);
+        }
+    }
+
+    bool valid() const
+    {
+        return _valid;
     }
 
     void push_back(const int32_t range)
@@ -116,6 +128,7 @@ public:
     }
 
 private:
+    bool _valid{};
     bool _dirty{};
     LGFX_Sprite _sprite{};
     const char* _label;
@@ -174,7 +187,8 @@ void setup()
     if (has_lcd) {
         const int32_t frames = 8;
         view[0]              = new View(lcd, 2000, "HAT", hat_color, frames);
-        view[1]              = new View(lcd, 2000, "UNIT", unit_color, frames);
+        view[1]              = new View(lcd, unit_max_range, "UNIT", unit_color, frames);
+        has_lcd              = view[0]->valid() && view[1]->valid();
     }
 }
 

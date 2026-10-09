@@ -48,13 +48,20 @@ public:
     {
         _sprite.setPsram(false);
         _sprite.setColorDepth(1);
-        _w      = dst.width();
-        _h      = dst.height() >> 1;
-        has_lcd = _sprite.createSprite(_w, _h);
-        _sprite.setPaletteColor(0, TFT_BLACK);
-        _sprite.setPaletteColor(1, color);
-        _sprite.setTextColor(1, 0);
-        _sprite.fillSprite(0);
+        _w     = dst.width();
+        _h     = dst.height() >> 1;
+        _valid = _sprite.createSprite(_w, _h);
+        if (_valid) {
+            _sprite.setPaletteColor(0, TFT_BLACK);
+            _sprite.setPaletteColor(1, color);
+            _sprite.setTextColor(1, 0);
+            _sprite.fillSprite(0);
+        }
+    }
+
+    bool valid() const
+    {
+        return _valid;
     }
 
     void push_back(const int32_t range)
@@ -129,6 +136,7 @@ public:
     }
 
 private:
+    bool _valid{};
     bool _dirty{};
     LGFX_Sprite _sprite{};
     const char* _label;
@@ -170,6 +178,7 @@ void setup()
         const int32_t frames = 8;
         view[0]              = new View(lcd, 2000, "ToF", tof_color, frames);
         view[1]              = new View(lcd, 4000, "ToF4M", tof4m_color, frames);
+        has_lcd              = view[0]->valid() && view[1]->valid();
     }
 }
 
