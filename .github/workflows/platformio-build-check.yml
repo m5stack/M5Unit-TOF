@@ -119,11 +119,31 @@ jobs:
             board: NessoN1
             framework: Arduino
             espressif32: latest
-          # ViaPaHub
+          # ViaPaHub (NessoN1 compiles the same as NanoC6)
           - example: ViaPaHub
             board: Core
             framework: Arduino
             espressif32: latest
+          - example: ViaPaHub
+            board: CoreS3
+            framework: Arduino
+            espressif32: latest
+          - example: ViaPaHub
+            board: NanoC6
+            framework: Arduino
+            espressif32: latest
+          - example: ViaPaHub
+            board: NanoH2
+            framework: Arduino
+            espressif32: latest
+          - example: ViaPaHub
+            board: Tab5
+            framework: Arduino
+            espressif32: latest
+#          - example: ViaPaHub
+#            board: NessoN1
+#            framework: Arduino
+#            espressif32: latest
 
     steps:
       - name: Checkout
