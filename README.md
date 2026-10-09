@@ -50,7 +50,7 @@ By rotating the laser emission module by 90°, it achieves horizontal forward de
 |UnitToF90|OK||
 
 UnitToF / UnitToF4M / UnitToF90 all use the same address (0x29), so connect them to different PaHub channels to use them together.
-See also [examples/UnitUnified/ViaPaHub](examples/UnitUnified/ViaPaHub) and [M5Unit-HUB](https://github.com/m5stack/M5Unit-HUB)
+See also the [ViaPaHub](examples/UnitUnified/ViaPaHub) example (UnitToF / UnitToF4M on one PaHub) and [M5Unit-HUB](https://github.com/m5stack/M5Unit-HUB)
 
 ## Examples
 See also [examples/UnitUnified](examples/UnitUnified)
