@@ -5,10 +5,10 @@
  */
 /*!
   @file M5UnitUnifiedTOF.hpp
-  @brief Main header of M5UnitToF
+  @brief Main header of M5Unit-TOF
 
   @mainpage M5Unit-TOF
-  Library for UnitTOF using M5UnitUnified.
+  Library for UnitToF / UnitToF4M / HatToF / UnitToF90 using M5UnitUnified.
 */
 #ifndef M5_UNIT_UNIFIED_TOF_HPP
 #define M5_UNIT_UNIFIED_TOF_HPP
@@ -18,7 +18,7 @@
 
 /*!
   @namespace m5
-  @brief Top level namespace of M5stack
+  @brief Top level namespace of M5Stack
  */
 namespace m5 {
 
