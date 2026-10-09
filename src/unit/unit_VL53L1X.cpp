@@ -17,6 +17,10 @@ using namespace m5::unit::vl53l1x::command;
 
 namespace {
 constexpr uint8_t VALID_MODEL_ID{0xEA};
+// SYSTEM_INTERMEASUREMENT_PERIOD = OSC_CALIBRATE_VAL * ms * factor
+// The ULD writes with 1.075 (and reads with 1.065; the full API uses 1.064 for both).
+// Use 1.075 for both so that a written value reads back the same (measured period: about 99 % of the set value)
+constexpr float IMP_FACTOR{1.075f};
 constexpr uint8_t VALID_MODULE_TYPE{0xCC};
 
 enum class SystemMode : uint8_t {
@@ -667,7 +671,7 @@ bool UnitVL53L1X::readInterMeasurementPeriod(uint16_t& ms)
             M5_LIB_LOGE("Invalid OSC calibrate value");
             return false;
         }
-        ms = static_cast<uint16_t>(tmp32 / (cpll * 1.065f) + 0.5f);
+        ms = static_cast<uint16_t>(tmp32 / (cpll * IMP_FACTOR) + 0.5f);
         return true;
     }
     return false;
@@ -682,7 +686,7 @@ bool UnitVL53L1X::writeInterMeasurementPeriod(const uint16_t ms)
             M5_LIB_LOGE("Invalid OSC calibrate value");
             return false;
         }
-        const uint32_t tmp32 = static_cast<uint32_t>(cpll * ms * 1.065f);
+        const uint32_t tmp32 = static_cast<uint32_t>(cpll * ms * IMP_FACTOR);
 
         if (writeRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, tmp32)) {
             _interval = ms;
