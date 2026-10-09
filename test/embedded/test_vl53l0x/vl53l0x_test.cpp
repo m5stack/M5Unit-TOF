@@ -120,7 +120,9 @@ constexpr const char* mode_string[] = {"Default", "Acc", "Long", "Speed"};
 constexpr size_t SINGLESHOT_COUNT{32};
 // Tests named *WithTarget need a matte object placed at this distance in front of the sensor.
 // They FAIL (not skip) without it, so that a forgotten object is noticed.
-constexpr uint16_t TARGET_DISTANCE_MM{140};
+// Distance from the sensor face. E.g. with the unit lying on the desk, put the object on two M5 Cores stacked on
+// each side (2 x 54 mm = 108 mm above the desk, about 100 mm from the sensor face)
+constexpr uint16_t TARGET_DISTANCE_MM{100};
 
 // "status:range" of each measurement, for failure messages
 std::string describe(const std::vector<vl53l0x::Data>& results)
