@@ -379,10 +379,10 @@ bool UnitVL53L0X::readSignalRateLimit(float& mcps)
     return false;
 }
 
-bool UnitVL53L0X::perform_single_ref_calibration(const bool VHV)
+bool UnitVL53L0X::perform_single_ref_calibration(const bool vhv)
 {
-    const uint8_t seq_cfg   = VHV ? 0x01 : 0x02;
-    const uint8_t sys_start = (VHV ? 0x40 : 0x00) | 0x01;
+    const uint8_t seq_cfg   = vhv ? 0x01 : 0x02;
+    const uint8_t sys_start = (vhv ? 0x40 : 0x00) | 0x01;
     if (!writeRegister8(SYSTEM_SEQUENCE_CONFIG, seq_cfg) || !writeRegister8(SYSTEM_RANGE_START, sys_start)) {
         return false;
     }

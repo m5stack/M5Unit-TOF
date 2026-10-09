@@ -33,7 +33,7 @@ enum class Operating : uint8_t {
   @brief Operation Mode
  */
 enum class Mode : int8_t {
-    Unknown = -1,
+    Unknown = -1,  //!< Unknown (not set)
     Default,       //!< interval 30ms  (limited to 1.2m)
     HighAccuracy,  //!< interval 200ms (limited to 1.2m)
     LongRange,     //!< interval 33ms  (limited to 2.0m)
@@ -45,13 +45,13 @@ enum class Mode : int8_t {
   @brief Range status interpretation
  */
 enum class RangeStatus : uint8_t {
-    OK,
-    HardwareFailure,
-    PhaseFailure,
-    MinRangeFailure,
-    SignalFailure,
-    SigmaFailure,
-    Unknown = 255
+    OK,               //!< Range valid
+    HardwareFailure,  //!< Hardware failure
+    PhaseFailure,     //!< Phase out of the valid limits
+    MinRangeFailure,  //!< Minimum range failure
+    SignalFailure,    //!< Signal rate below the limit
+    SigmaFailure,     //!< Sigma (standard deviation) above the limit
+    Unknown = 255     //!< No status
 };
 
 /*!
@@ -218,17 +218,17 @@ public:
     */
     bool writeMode(const vl53l0x::Mode mode);
 
-    ///@name Signal range limit
+    ///@name Signal rate limit
     ///@{
     /*!
-      @brief Read the signal range limit
-      @param[out] mcps value
+      @brief Read the signal rate limit
+      @param[out] mcps Signal rate limit (MCPS, 9.7 fixed point, 0.0 - 511.99)
       @return True if successful
      */
     bool readSignalRateLimit(float& mcps);
     /*!
-      @brief Write the signal range limit
-      @param mcps value
+      @brief Write the signal rate limit
+      @param mcps Signal rate limit (MCPS, 9.7 fixed point, 0.0 - 511.99)
       @return True if successful
      */
     bool writeSignalRateLimit(const float mcps);
@@ -263,7 +263,7 @@ protected:
     bool read_measurement(vl53l0x::Data& d);
 
     bool write_default_values();
-    bool perform_single_ref_calibration(bool VHV);
+    bool perform_single_ref_calibration(const bool vhv);
     bool write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t final_pclk);
 
     bool soft_reset();
