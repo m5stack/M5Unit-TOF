@@ -23,8 +23,8 @@ m5::unit::UnitToF unit;
 //  ------
 m5::unit::HatToF hat;
 
-constexpr uint32_t hat_color{0xCC66FFU};  // Lavender
-constexpr uint32_t unit_color{TFT_ORANGE};
+constexpr uint32_t hat_color{0xCC66FFU};   // Lavender
+constexpr uint32_t unit_color{0xFFB400U};  // Orange (RGB888)
 
 bool has_lcd{};
 

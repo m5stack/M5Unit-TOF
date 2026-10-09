@@ -42,7 +42,7 @@ m5::unit::UnitToF90 unit;
 #endif
 
 #if defined(USING_UNIT_TOF)
-constexpr uint32_t display_color{TFT_ORANGE};
+constexpr uint32_t display_color{0xFFB400U};  // Orange (RGB888)
 #elif defined(USING_UNIT_TOF4M)
 constexpr uint32_t display_color{0x00CC99U};  // Mint
 #elif defined(USING_HAT_TOF)
