@@ -68,8 +68,8 @@ constexpr uint16_t pre_and_final_timeout_macrop_table[4][4] = {{0x02B0, 0x0296, 
 
 constexpr RangeStatus range_status_table[16] = {
     RangeStatus::Unknown,         RangeStatus::HardwareFailure, RangeStatus::HardwareFailure,
-    RangeStatus::HardwareFailure, RangeStatus::SignalFailure,   RangeStatus::PhaseFailure,
-    RangeStatus::MinRangeFailure, RangeStatus::Unknown,         RangeStatus::MinRangeFailure,
+    RangeStatus::HardwareFailure, RangeStatus::SignalFailure,   RangeStatus::Unknown,
+    RangeStatus::PhaseFailure,    RangeStatus::Unknown,         RangeStatus::MinRangeFailure,
     RangeStatus::PhaseFailure,    RangeStatus::MinRangeFailure, RangeStatus::OK,
     RangeStatus::Unknown,         RangeStatus::Unknown,         RangeStatus::Unknown,
     RangeStatus::Unknown};
@@ -131,9 +131,7 @@ bool UnitVL53L0X::write_default_settings()
         M5_LIB_LOGE("Failed to set i2c standard mode");
         return false;
     }
-    // M5_LIB_LOGD(">>>>>> stop:%x", _stop);
-
-    // Signal (Is it off by 20mm or so?)
+    // Disable SIGNAL_RATE_MSRC (bit 1) and SIGNAL_RATE_PRE_RANGE (bit 4) limit checks
     uint8_t v{};
     if (!readRegister8(MSRC_CONFIG_CONTROL, v, 0) || !writeRegister8(MSRC_CONFIG_CONTROL, v | 0x12)) {
         M5_LIB_LOGE("Failed to set signal");
@@ -219,8 +217,8 @@ void UnitVL53L0X::update(const bool force)
 {
     _updated = false;
     if (inPeriodic()) {
-        elapsed_time_t at{m5::utility::millis()};
-        if (force || !_latest || at >= _latest + _interval) {
+        const elapsed_time_t at{m5::utility::millis()};
+        if (force || !_latest || m5::utility::hasElapsed(_latest, _interval, at)) {
             if (read_data_ready_status()) {
                 Data d{};
                 _updated = read_measurement(d);
@@ -263,7 +261,7 @@ bool UnitVL53L0X::start_periodic_measurement()
 bool UnitVL53L0X::stop_periodic_measurement()
 {
     if (writeRegister8(SYSTEM_RANGE_START, 0x01) && writeRegister8(0xFF_u8, 0x01) && writeRegister8(0x00_u8, 0x00) &&
-        writeRegister8(0x91_u8, 0x00) && writeRegister8(0xFF_u8, 0x00)) {
+        writeRegister8(0x91_u8, 0x00) && writeRegister8(0x00_u8, 0x01) && writeRegister8(0xFF_u8, 0x00)) {
         _periodic = false;
         return true;
     }
@@ -286,11 +284,11 @@ bool UnitVL53L0X::measureSingleshot(vl53l0x::Data& data)
         return false;
     }
 
-    auto timeout_at = m5::utility::millis() + 1000;
+    auto start_at = m5::utility::millis();
     bool done{};
     uint8_t v{};
     done = readRegister8(SYSTEM_RANGE_START, v, 0) && ((v & 0x01) == 0);
-    while (!done && m5::utility::millis() <= timeout_at) {
+    while (!done && !m5::utility::hasElapsed(start_at, 1000)) {
         m5::utility::delay(1);
         done = readRegister8(SYSTEM_RANGE_START, v, 0) && ((v & 0x01) == 0);
     }
@@ -299,13 +297,13 @@ bool UnitVL53L0X::measureSingleshot(vl53l0x::Data& data)
         return false;
     }
 
-    timeout_at = m5::utility::millis() + 1000;
+    start_at = m5::utility::millis();
     do {
         if (read_data_ready_status()) {
             return read_measurement(data) && writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01);
         }
         m5::utility::delay(1);
-    } while (m5::utility::millis() <= timeout_at);
+    } while (!m5::utility::hasElapsed(start_at, 1000));
 
     M5_LIB_LOGE("Timeout");
     return false;
@@ -328,18 +326,12 @@ bool UnitVL53L0X::writeSignalRateLimit(const float mcps)
         M5_LIB_LOGE("Valid range is between 0.0f and 512.0f %f", mcps);
         return false;
     }
-    uint16_t v = static_cast<uint16_t>(mcps * (1 << 7));
+    const uint16_t v = static_cast<uint16_t>(mcps * (1 << 7));
     return writeRegister16BE(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, v);
 }
 
 bool UnitVL53L0X::writeMode(const vl53l0x::Mode mode)
 {
-    /*
-    if (_mode == mode) {
-        return true;
-    }
-    */
-
     if (!writeRegister8(0x80_u8, 0x01) || !writeRegister8(0xFF_u8, 0x01) || !writeRegister8(0x00_u8, 0x00) ||
         !writeRegister8(0x91_u8, _stop) || !writeRegister8(0x00_u8, 0x01) || !writeRegister8(0xFF_u8, 0x00) ||
         !writeRegister8(0x80_u8, 0x00)) {
@@ -389,16 +381,16 @@ bool UnitVL53L0X::readSignalRateLimit(float& mcps)
 
 bool UnitVL53L0X::perform_single_ref_calibration(const bool VHV)
 {
-    uint8_t seq_cfg   = VHV ? 0x01 : 0x02;
-    uint8_t sys_start = (VHV ? 0x40 : 0x00) | 0x01;
+    const uint8_t seq_cfg   = VHV ? 0x01 : 0x02;
+    const uint8_t sys_start = (VHV ? 0x40 : 0x00) | 0x01;
     if (!writeRegister8(SYSTEM_SEQUENCE_CONFIG, seq_cfg) || !writeRegister8(SYSTEM_RANGE_START, sys_start)) {
         return false;
     }
 
-    auto timeout_at = m5::utility::millis() + 5000;
+    const auto start_at = m5::utility::millis();
     uint8_t v{};
     while (!readRegister8(RESULT_INTERRUPT_STATUS, v, 0) || (v & 0x07) == 0) {
-        if (m5::utility::millis() > timeout_at) {
+        if (m5::utility::hasElapsed(start_at, 5000)) {
             M5_LIB_LOGE("Timeout");
             return false;
         }
@@ -409,8 +401,8 @@ bool UnitVL53L0X::perform_single_ref_calibration(const bool VHV)
 
 bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t final_pclk)
 {
-    uint8_t pre_vcsel_period   = (pre_pclk >> 1) - 1;
-    uint8_t final_vcsel_period = (final_pclk >> 1) - 1;
+    const uint8_t pre_vcsel_period   = (pre_pclk >> 1) - 1;
+    const uint8_t final_vcsel_period = (final_pclk >> 1) - 1;
 
     if ((pre_pclk & 1) || pre_pclk < 12 || pre_pclk > 18) {
         M5_LIB_LOGE("Invalid pre_pclk %u", pre_pclk);
@@ -422,7 +414,7 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
     }
 
     // pre
-    uint32_t pre_idx = (pre_pclk - 12) >> 1;  // 0-3
+    const uint32_t pre_idx = (pre_pclk - 12) >> 1;  // 0-3
     if (!writeRegister8(PRE_RANGE_CONFIG_VALID_PHASE_HIGH, pre_phase_table[pre_idx]) ||
         !writeRegister8(PRE_RANGE_CONFIG_VALID_PHASE_LOW, 0x08) ||
         !writeRegister8(PRE_RANGE_CONFIG_VCSEL_PERIOD, pre_vcsel_period) ||
@@ -433,7 +425,7 @@ bool UnitVL53L0X::write_vcsel_period_range(const uint8_t pre_pclk, const uint8_t
     }
 
     // final
-    uint32_t final_idx = (final_pclk - 8) >> 1;  // 0-3
+    const uint32_t final_idx = (final_pclk - 8) >> 1;  // 0-3
     if (!writeRegister8(FINAL_RANGE_CONFIG_VALID_PHASE_HIGH, final_values_table[final_idx].phase_hi) ||
         !writeRegister8(FINAL_RANGE_CONFIG_VALID_PHASE_LOW, final_values_table[final_idx].phase_low) ||
         !writeRegister8(GLOBAL_CONFIG_VCSEL_WIDTH, final_values_table[final_idx].vcsel) ||
