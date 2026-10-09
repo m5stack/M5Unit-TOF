@@ -194,6 +194,11 @@ TEST_F(TestVL53L1X, CalibrationWithTarget)
 {
     SCOPED_TRACE(ustr);
 
+    // calibrateOffset() / calibrateXtalk() do not check the range status, so they also "succeed" without a target.
+    // Check the target first so that a missing object fails here.
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    check_singleshot_results_with_target(measure_singleshots(unit.get()));
+
     int16_t offset{}, offset2{};
     EXPECT_TRUE(unit->calibrateOffset(offset, TARGET_DISTANCE_MM))
         << "No target? Place a matte object " << TARGET_DISTANCE_MM << " mm away";
@@ -207,6 +212,27 @@ TEST_F(TestVL53L1X, CalibrationWithTarget)
     EXPECT_TRUE(unit->readXtalk(xtalk2));
     EXPECT_EQ((xtalk << 9) / 1000, (xtalk2 << 9) / 1000) << xtalk << "/" << xtalk2;
     EXPECT_TRUE(unit->writeXtalk(0));
+}
+
+// Long mode cannot use the 15 ms budget: the change must be rejected before any register is written
+TEST_F(TestVL53L1X, DistanceModeLongRejectsBudget15ms)
+{
+    SCOPED_TRACE(ustr);
+
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->writeDistanceMode(Distance::Short));
+    EXPECT_TRUE(unit->writeTimingBudget(Timing::Budget15ms));
+
+    EXPECT_FALSE(unit->writeDistanceMode(Distance::Long));
+
+    Distance d{};
+    Timing tb{};
+    EXPECT_TRUE(unit->readDistanceMode(d));
+    EXPECT_TRUE(unit->readTimingBudget(tb));
+    EXPECT_EQ(d, Distance::Short);
+    EXPECT_EQ(unit->distanceMode(), Distance::Short);
+    EXPECT_EQ(tb, Timing::Budget15ms);
+    EXPECT_EQ(unit->timingBudget(), Timing::Budget15ms);
 }
 
 TEST_F(TestVL53L1X, DistanceAndTimingBudget)
@@ -306,6 +332,9 @@ TEST_F(TestVL53L1X, Reset)
     EXPECT_TRUE(unit->writeXtalk(456));
 
     EXPECT_TRUE(unit->softReset());  // DO!
+    // Cached settings are cleared too (the sensor is back to its defaults)
+    EXPECT_EQ(unit->distanceMode(), Distance::Unknown);
+    EXPECT_EQ(unit->timingBudget(), Timing::BudgetUnknown);
 
     Distance d{};
     Timing tb{};
