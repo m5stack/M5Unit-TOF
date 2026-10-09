@@ -31,7 +31,7 @@ By rotating the laser emission module by 90°, it achieves horizontal forward de
 - [Unit Mini ToF-90 & Datasheet](https://docs.m5stack.com/en/unit/Unit%20Mini%20ToF-90)
 
 
-## Required Libraries:
+## Required Libraries
 
 - [M5UnitUnified](https://github.com/m5stack/M5UnitUnified)
 - [M5Utility](https://github.com/m5stack/M5Utility)
@@ -41,21 +41,10 @@ By rotating the laser emission module by 90°, it achieves horizontal forward de
 
 - [M5Unit-TOF - MIT](LICENSE)
 
-## Support via [PaHub](https://docs.m5stack.com/en/unit/Unit-PaHub%20v2.1)
-
-|Unit|Support|Note|
-|---|---|---|
-|UnitToF|OK||
-|UnitToF4M|OK||
-|UnitToF90|OK||
-
-UnitToF / UnitToF4M / UnitToF90 all use the same address (0x29), so connect them to different PaHub channels to use them together.
-See also the [ViaPaHub](examples/UnitUnified/ViaPaHub) example (UnitToF / UnitToF4M on one PaHub) and [M5Unit-HUB](https://github.com/m5stack/M5Unit-HUB)
-
 ## Examples
 See also [examples/UnitUnified](examples/UnitUnified)
 
-### For ArduinoIDE settings
+### For Arduino IDE settings
 You must choose a define symbol for the unit you will use.
 (Rewrite source or specify with compile options)
 
@@ -95,6 +84,17 @@ idf.py build flash monitor
 ```
 
 The other examples (DualSensor, ViaPaHub) have no variant; run `idf.py set-target <chip>` and `idf.py build flash monitor` directly.
+
+## Support via [PaHub](https://docs.m5stack.com/en/unit/Unit-PaHub%20v2.1)
+
+|Unit|Support|Note|
+|---|---|---|
+|UnitToF|OK||
+|UnitToF4M|OK||
+|UnitToF90|OK||
+
+UnitToF / UnitToF4M / UnitToF90 all use the same address (0x29), so connect them to different PaHub channels to use them together.
+See also the [ViaPaHub](examples/UnitUnified/ViaPaHub) example (UnitToF / UnitToF4M on one PaHub) and [M5Unit-HUB](https://github.com/m5stack/M5Unit-HUB)
 
 ## Doxygen document
 [GitHub Pages](https://m5stack.github.io/M5Unit-TOF/)
