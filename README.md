@@ -84,6 +84,24 @@ You must choose a define symbol for the unit you will use.
 #endif
 ```
 
+### For ESP-IDF settings
+
+> **NOTE:** The ESP-IDF native build (`idf.py`) targets ESP-IDF **5.1 or later** (5.x and 6.x).
+
+On ESP-IDF native builds (`idf.py`), the unit for PlotToSerial is selected via Kconfig instead of editing the source `#define`. `PlotToSerial/main/Kconfig.projbuild` sources `examples/UnitUnified/common/Kconfig.variant` (UnitToF / UnitToF4M / UnitToF90 / HatToF), and `examples/UnitUnified/common/variant.cmake` maps the chosen `CONFIG_EXAMPLE_USING_*` to the source-level macro shared with the Arduino build, so the example source itself does not need to be edited. The **HatToF** option appears only when the target is esp32 / esp32s3 / esp32c6 (the chips of the boards with a Hat header).
+
+Pick the unit with `menuconfig`:
+
+```sh
+cd examples/UnitUnified/PlotToSerial
+idf.py set-target esp32s3                          # or esp32 / esp32c6 / esp32p4 / ...
+idf.py menuconfig
+# -> M5Unit-TOF PlotToSerial example -> Target unit -> choose ONE
+idf.py build flash monitor
+```
+
+The other examples (DualSensor, ViaPaHub) have no variant; run `idf.py set-target <chip>` and `idf.py build flash monitor` directly.
+
 ## Doxygen document
 [GitHub Pages](https://m5stack.github.io/M5Unit-TOF/)
 

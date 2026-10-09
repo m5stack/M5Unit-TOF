@@ -1,0 +1,25 @@
+# "Target unit" selection for the PlotToSerial example (ESP-IDF).
+# rsource'd from PlotToSerial/main/Kconfig.projbuild. The chosen CONFIG_EXAMPLE_USING_* is mapped
+# to the source-level USING_* macro in common/variant.cmake (shared with the Arduino build).
+menu "M5Unit-TOF PlotToSerial example"
+
+choice EXAMPLE_TOF_VARIANT
+    prompt "Target unit"
+    default EXAMPLE_USING_UNIT_TOF
+    help
+        Which ToF unit this example drives.
+
+    config EXAMPLE_USING_UNIT_TOF
+        bool "UnitToF (U010, VL53L0X / GROVE)"
+    config EXAMPLE_USING_UNIT_TOF4M
+        bool "UnitToF4M (U172, VL53L1X / GROVE)"
+    config EXAMPLE_USING_UNIT_TOF90
+        bool "UnitToF90 (U196, VL53L0X / GROVE)"
+    config EXAMPLE_USING_HAT_TOF
+        bool "HatToF (U072, VL53L0X / Hat header)"
+        # Boards with a Hat header: StickC / StickCPlus / StickCPlus2 / CoreInk (esp32),
+        # StickS3 (esp32s3), NessoN1 (esp32c6)
+        depends on IDF_TARGET_ESP32 || IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32C6
+endchoice
+
+endmenu

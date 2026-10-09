@@ -1,0 +1,2 @@
+# The "Target unit" choice for this example.
+rsource "../../common/Kconfig.variant"
