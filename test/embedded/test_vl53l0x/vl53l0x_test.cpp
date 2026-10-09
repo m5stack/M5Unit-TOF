@@ -188,6 +188,7 @@ TEST_F(TestVL53L0X, SignalRateLimitAndReset)
 
     EXPECT_FALSE(unit->writeSignalRateLimit(512.f));
     EXPECT_FALSE(unit->writeSignalRateLimit(-0.000001f));
+    EXPECT_FALSE(unit->writeSignalRateLimit(NAN));
 
     uint32_t cnt{32};
     float mcps{}, tmp{};

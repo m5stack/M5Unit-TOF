@@ -624,8 +624,12 @@ bool UnitVL53L1X::readTimingBudget(vl53l1x::Timing& tb)
 
 bool UnitVL53L1X::write_timing_budget(const Timing tb, const Distance dist)
 {
-    if (tb == Timing::BudgetUnknown || dist == Distance::Unknown) {
-        M5_LIB_LOGE("Illegal arg or status %u/%u", tb, dist);
+    // Also rejects Unknown (-1) and values out of the enums
+    const auto tb_idx   = m5::stl::to_underlying(tb);
+    const auto dist_idx = m5::stl::to_underlying(dist);
+    if (tb_idx < 0 || static_cast<size_t>(tb_idx) >= m5::stl::size(tb_table[0]) || dist_idx < 0 ||
+        static_cast<size_t>(dist_idx) >= m5::stl::size(tb_table)) {
+        M5_LIB_LOGE("Illegal arg or status %d/%d", tb_idx, dist_idx);
         return false;
     }
     if (tb == Timing::Budget15ms && dist == Distance::Long) {
@@ -633,10 +637,8 @@ bool UnitVL53L1X::write_timing_budget(const Timing tb, const Distance dist)
         return false;
     }
 
-    if (writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_A_HI,
-                          tb_table[m5::stl::to_underlying(dist)][m5::stl::to_underlying(tb)][0]) &&
-        writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_B_HI,
-                          tb_table[m5::stl::to_underlying(dist)][m5::stl::to_underlying(tb)][1])) {
+    if (writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_A_HI, tb_table[dist_idx][tb_idx][0]) &&
+        writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_B_HI, tb_table[dist_idx][tb_idx][1])) {
         _tb = tb;
         return true;
     }

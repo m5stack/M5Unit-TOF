@@ -255,6 +255,10 @@ TEST_F(TestVL53L1X, DistanceAndTimingBudget)
 {
     SCOPED_TRACE(ustr);
 
+    // Values out of the enum are rejected
+    EXPECT_FALSE(unit->writeTimingBudget(static_cast<Timing>(7)));
+    EXPECT_FALSE(unit->writeTimingBudget(Timing::BudgetUnknown));
+
     // For each distance mode, write every timing budget
     for (auto&& d : distance_table) {
         Distance dd{};

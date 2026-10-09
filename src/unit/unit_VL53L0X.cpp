@@ -322,7 +322,7 @@ bool UnitVL53L0X::read_measurement(vl53l0x::Data& d)
 
 bool UnitVL53L0X::writeSignalRateLimit(const float mcps)
 {
-    if (mcps < 0.0f || mcps >= 512.f) {
+    if (!(mcps >= 0.0f && mcps < 512.f)) {  // Also rejects NaN
         M5_LIB_LOGE("Valid range is between 0.0f and 512.0f %f", mcps);
         return false;
     }
