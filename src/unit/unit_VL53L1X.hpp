@@ -14,7 +14,6 @@
 #include <m5_utility/container/circular_buffer.hpp>
 #include <m5_utility/types.hpp>
 #include <array>
-#include <limits>  // NaN
 
 namespace m5 {
 namespace unit {
@@ -35,9 +34,9 @@ enum class Operating : uint8_t {
   @brief Distance mode
  */
 enum class Distance : int8_t {
-    Unknown = -1,
-    Short,  //!< Short (limited to 1.3m)
-    Long,   //!< Long  (limited to 4.0m)
+    Unknown = -1,  //!< Unknown (not set)
+    Short,         //!< Short (limited to 1.3m)
+    Long,          //!< Long  (limited to 4.0m)
 };
 
 /*!
@@ -47,14 +46,14 @@ enum class Distance : int8_t {
   @warning inter-measurement period needs to be set
 */
 enum class Timing : int8_t {
-    BudgetUnknown = -1,
-    Budget15ms,   //!< 15 ms (Only possible when Short mode)
-    Budget20ms,   //!< 20 ms
-    Budget33ms,   //!< 33 ms
-    Budget50ms,   //!< 50 ms
-    Budget100ms,  //!< 100 ms
-    Budget200ms,  //!< 200 ms
-    Budget500ms,  //!< 500 ms
+    BudgetUnknown = -1,  //!< Unknown (not set)
+    Budget15ms,          //!< 15 ms (Only possible when Short mode)
+    Budget20ms,          //!< 20 ms
+    Budget33ms,          //!< 33 ms
+    Budget50ms,          //!< 50 ms
+    Budget100ms,         //!< 100 ms
+    Budget200ms,         //!< 200 ms
+    Budget500ms,         //!< 500 ms
 };
 
 /*!
@@ -62,21 +61,21 @@ enum class Timing : int8_t {
   @brief Range status interpretation
  */
 enum class RangeStatus : uint8_t {
-    OK,
-    SigmaFailure,
-    SignalFailure,
-    RangeValidMinRangeClipped,
-    OutOfBounds,
-    HardwareFailure,
-    Unknown6,
-    Wraparound,
-    Unknown8,
-    XtalkSignalFailure,
-    SynchronizationInt,
-    Unknown11,
-    Unknown12,
-    MinRangeFailure,
-    Unknown255 = 255,
+    OK,                         //!< Range valid
+    SigmaFailure,               //!< Sigma (standard deviation) above the limit
+    SignalFailure,              //!< Signal rate below the limit
+    RangeValidMinRangeClipped,  //!< Range valid, but clipped to the minimum range
+    OutOfBounds,                //!< Phase out of the valid limits
+    HardwareFailure,            //!< Hardware or VCSEL failure
+    Unknown6,                   //!< Unknown (not used)
+    Wraparound,                 //!< Wrapped target (phase does not match)
+    Unknown8,                   //!< Unknown (not used)
+    XtalkSignalFailure,         //!< Crosstalk signal failure
+    SynchronizationInt,         //!< First interrupt after start (synchronization)
+    Unknown11,                  //!< Unknown (not used)
+    Unknown12,                  //!< Unknown (not used)
+    MinRangeFailure,            //!< Minimum range failure
+    Unknown255 = 255,           //!< Unknown status
 };
 
 /*!
@@ -89,11 +88,11 @@ enum class RangeStatus : uint8_t {
     - If object distance < ThreshHigh or no object found: no report
     - If object distance > ThreshHigh and object found: report
   - Out
-    - ThreshLow < object distance < ThreshHigh: no report
-    - ThreshLow > object distance > ThreshHigh: report
+    - ThreshLow <= object distance <= ThreshHigh: no report
+    - object distance < ThreshLow or object distance > ThreshHigh: report
   - In
-    - ThreshLow > object distance > ThreshHigh: no report
-    - ThreshLow < object distance < ThreshHigh: report
+    - object distance < ThreshLow or object distance > ThreshHigh: no report
+    - ThreshLow <= object distance <= ThreshHigh: report
 */
 enum class Window : uint8_t {
     Below,           //!< Below a certain distance
@@ -119,7 +118,7 @@ struct Data {
      */
     inline bool valid() const
     {
-        return raw[0] == 9;
+        return (raw[0] & 0x1F) == 9;  // Bits 5-7 are flags (threshold hit, gph_id), not the status
     }
     /*!
       @brief range (mm)
@@ -155,9 +154,9 @@ public:
         vl53l1x::Timing timing_budget{vl53l1x::Timing::Budget100ms};
         //! Start periodic measurement on begin?
         bool start_periodic{true};
-        //! Calibrate offset if start on begin
+        //! Run offset calibration in begin() if true
         bool calibrate_offset{false};
-        //! Calibrate crosstalk if start on begin
+        //! Run crosstalk calibration in begin() if true
         bool calibrate_xtalk{false};
     };
 
@@ -174,7 +173,11 @@ public:
     {
     }
 
-    //! @brief Begin communication with the sensor
+    /*!
+      @brief Begin communication with the sensor
+      @details Resets the sensor, then restores the I2C address in use if it was changed
+      @warning The reset is resumed at the default address (0x29). Do not call it while another sensor still uses 0x29
+    */
     virtual bool begin() override;
     //! @brief Update periodic measurement data
     virtual void update(const bool force = false) override;
@@ -291,8 +294,13 @@ public:
     */
     bool writeDistanceMode(const vl53l1x::Distance d);
 
-    //! @brief Software reset
-    //! @return True if successful
+    /*!
+      @brief Software reset
+      @return True if successful
+      @note The sensor reverts to the default I2C address (0x29), and so does this instance
+      @note To reset while keeping the changed address, call begin() instead
+      @warning The reset is resumed at 0x29. Do not call it while another sensor still uses 0x29
+    */
     bool softReset();
 
     ///@name Offset
@@ -413,28 +421,6 @@ public:
     }
     ///@}
 
-    /*!
-      ROI coordinate
-      @verbatim
-      128,136,144,152,160,168,176,184,   192,200,208,216,224,232,240,248
-      129,137,145,153,161,169,177,185,   193,201,209,217,225,233,241,249
-      130,138,146,154,162,170,178,186,   194,202,210,218,226,234,242,250
-      131,139,147,155,163,171,179,187,   195,203,211,219,227,235,243,251
-      132,140,148,156,164,172,180,188,   196,204,212,220,228,236,244,252
-      133,141,149,157,165,173,181,189,   197,205,213,221,229,237,245,253
-      134,142,150,158,166,174,182,190,   198,206,214,222,230,238,246,254
-      135,143,151,159,167,175,183,191,   199,207,215,223,231,239,247,255
-
-      127,119,111,103, 95, 87, 79, 71,    63, 55, 47, 39, 31, 23, 15,  7
-      126,118,110,102, 94, 86, 78, 70,    62, 54, 46, 38, 30, 22, 14,  6
-      125,117,109,101, 93, 85, 77, 69,    61, 53, 45, 37, 29, 21, 13,  5
-      124,116,108,100, 92, 84, 76, 68,    60, 52, 44, 36, 28, 20, 12,  4
-      123,115,107, 99, 91, 83, 75, 67,    59, 51, 43, 35, 27, 19, 11,  3
-      122,114,106, 98, 90, 82, 74, 66,    58, 50, 42, 34, 26, 18, 10,  2
-      121,113,105, 97, 89, 81, 73, 65,    57, 49, 41, 33, 25, 17,  9,  1
-      120,112,104, 96, 88, 80, 72, 64,    56, 48, 40, 32, 24, 16,  8,  0
-      @endverbatim
-     */
     ///@name ROI(Region Of Interest)
     ///@{
     /*!
@@ -455,7 +441,8 @@ public:
       @param wid width
       @param hgt height
       @return True if successful
-      @note If wid or hgt is greater than 10, the center position is also changed
+      @note If wid or hgt is greater than 10, the center is also set to 199.
+      It is not restored when a smaller ROI is written; call writeROICenter() if needed
       @warning Valid param between 4 and 16
      */
     bool writeROI(const uint8_t wid, const uint8_t hgt);
@@ -464,6 +451,26 @@ public:
       @param center ROI coordinates
       @return True if successful
       @warning If the center is outside the ROI size boundary, the measurement returns an error
+      @details ROI coordinates (SPAD numbers)
+      @verbatim
+      128,136,144,152,160,168,176,184,   192,200,208,216,224,232,240,248
+      129,137,145,153,161,169,177,185,   193,201,209,217,225,233,241,249
+      130,138,146,154,162,170,178,186,   194,202,210,218,226,234,242,250
+      131,139,147,155,163,171,179,187,   195,203,211,219,227,235,243,251
+      132,140,148,156,164,172,180,188,   196,204,212,220,228,236,244,252
+      133,141,149,157,165,173,181,189,   197,205,213,221,229,237,245,253
+      134,142,150,158,166,174,182,190,   198,206,214,222,230,238,246,254
+      135,143,151,159,167,175,183,191,   199,207,215,223,231,239,247,255
+
+      127,119,111,103, 95, 87, 79, 71,    63, 55, 47, 39, 31, 23, 15,  7
+      126,118,110,102, 94, 86, 78, 70,    62, 54, 46, 38, 30, 22, 14,  6
+      125,117,109,101, 93, 85, 77, 69,    61, 53, 45, 37, 29, 21, 13,  5
+      124,116,108,100, 92, 84, 76, 68,    60, 52, 44, 36, 28, 20, 12,  4
+      123,115,107, 99, 91, 83, 75, 67,    59, 51, 43, 35, 27, 19, 11,  3
+      122,114,106, 98, 90, 82, 74, 66,    58, 50, 42, 34, 26, 18, 10,  2
+      121,113,105, 97, 89, 81, 73, 65,    57, 49, 41, 33, 25, 17,  9,  1
+      120,112,104, 96, 88, 80, 72, 64,    56, 48, 40, 32, 24, 16,  8,  0
+      @endverbatim
      */
     bool writeROICenter(const uint8_t center);
     ///@}
@@ -519,7 +526,7 @@ constexpr uint16_t I2C_SLAVE_DEVICE_ADDRESS                                     
 constexpr uint16_t OSC_MEASURED_FAST_OSC_FREQUENCY                              {0x0006};
 constexpr uint16_t VHV_CONFIG_TIMEOUT_MACROP_LOOP_BOUND                         {0x0008};
 constexpr uint16_t VHV_CONFIG_INIT                                              {0x000B};
-constexpr uint16_t ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS                {0x0016};// [15:0] fixed point 7.9)
+constexpr uint16_t ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS                {0x0016};// [15:0] fixed point 7.9
 constexpr uint16_t ALGO_CROSSTALK_COMPENSATION_X_PLANE_GRADIENT_KCPS            {0x0018};
 constexpr uint16_t ALGO_CROSSTALK_COMPENSATION_Y_PLANE_GRADIENT_KCPS            {0x001A};
 constexpr uint16_t ALGO_PART_TO_PART_RANGE_OFFSET_MM                            {0x001E};// [12:0] fixed point 11.2

@@ -17,6 +17,10 @@ using namespace m5::unit::vl53l1x::command;
 
 namespace {
 constexpr uint8_t VALID_MODEL_ID{0xEA};
+// SYSTEM_INTERMEASUREMENT_PERIOD = OSC_CALIBRATE_VAL * ms * factor
+// The ULD writes with 1.075 (and reads with 1.065; the full API uses 1.064 for both).
+// Use 1.075 for both so that a written value reads back the same (measured period: about 99 % of the set value)
+constexpr float IMP_FACTOR{1.075f};
 constexpr uint8_t VALID_MODULE_TYPE{0xCC};
 
 enum class SystemMode : uint8_t {
@@ -131,7 +135,13 @@ bool UnitVL53L1X::begin()
 
     // Check unit
     uint8_t model_id{}, module_type{};
-    readRegister8(MODEL_ID, model_id, 0);
+    if (readRegister8(MODEL_ID, model_id, 0) && model_id == 0x00) {
+        // Held in reset (e.g. a previous reset was not resumed): resume it
+        M5_LIB_LOGW("Held in reset, resume it");
+        if (writeRegister8(SOFT_RESET, 0x01) && wait_booted()) {
+            readRegister8(MODEL_ID, model_id, 0);
+        }
+    }
     readRegister8(MODULE_TYPE, module_type, 0);
     if (model_id != VALID_MODEL_ID || module_type != VALID_MODULE_TYPE) {
         M5_LIB_LOGE("This unit is NOT VL53L1X %x/%x", model_id, module_type);
@@ -170,12 +180,12 @@ bool UnitVL53L1X::begin()
 
     // Check
     if (writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeTimed))) {
-        auto timeout_at = m5::utility::millis() + 1000;
+        const auto start_at = m5::utility::millis();
         bool ready{};
         do {
             ready = read_data_ready_status();
             m5::utility::delay(1);
-        } while (!ready && m5::utility::millis() <= timeout_at);
+        } while (!ready && !m5::utility::hasElapsed(start_at, 1000));
         if (!ready) {
             M5_LIB_LOGE("Timeout");
             return false;
@@ -221,8 +231,8 @@ void UnitVL53L1X::update(const bool force)
 {
     _updated = false;
     if (inPeriodic()) {
-        elapsed_time_t at{m5::utility::millis()};
-        if (force || !_latest || at >= _latest + _interval) {
+        const elapsed_time_t at{m5::utility::millis()};
+        if (force || !_latest || m5::utility::hasElapsed(_latest, _interval, at)) {
             if (read_data_ready_status()) {
                 Data d{};
                 _updated = read_measurement(d);
@@ -285,12 +295,13 @@ bool UnitVL53L1X::measureSingleshot(vl53l1x::Data& data)
 
     if (writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01) &&
         writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeSingleShot))) {
-        auto timeout_at = m5::utility::millis() + _interval * 2;
+        const auto start_at = m5::utility::millis();
         do {
             if (read_data_ready_status()) {
                 return read_measurement(data);
             }
-        } while (m5::utility::millis() <= timeout_at);
+            m5::utility::delay(1);
+        } while (!m5::utility::hasElapsed(start_at, _interval * 2));
     }
     return false;
 }
@@ -304,6 +315,7 @@ bool UnitVL53L1X::softReset()
         if (writeRegister8(SOFT_RESET, 0x01)) {  // resume at default address
             m5::utility::delay(1);
             _distance = Distance::Unknown;
+            _tb       = Timing::BudgetUnknown;
             _periodic = false;
             return wait_booted() && write_default_values();
         }
@@ -313,24 +325,28 @@ bool UnitVL53L1X::softReset()
 
 bool UnitVL53L1X::soft_reset()
 {
-    if (writeRegister8(SOFT_RESET, 0x00)) {  // reset
-        m5::utility::delay(1);
-        if (writeRegister8(SOFT_RESET, 0x01)) {  // resume
-            m5::utility::delay(1);               // need delay
-            return true;
-        }
+    // The reset reverts the I2C address to the default: resume there, then restore the address in use
+    const uint8_t addr = address();
+    if (!writeRegister8(SOFT_RESET, 0x00)) {  // reset
+        return false;
     }
-    return false;
+    changeAddress(DEFAULT_ADDRESS);
+    m5::utility::delay(1);
+    if (!writeRegister8(SOFT_RESET, 0x01)) {  // resume
+        return false;
+    }
+    m5::utility::delay(1);  // need delay
+    return addr == DEFAULT_ADDRESS || (wait_booted() && changeI2CAddress(addr));
 }
 
 bool UnitVL53L1X::wait_booted()
 {
     uint8_t ss{};
-    auto timeout_at = m5::utility::millis() + 1000;
+    const auto start_at = m5::utility::millis();
     do {
         readRegister8(FIRMWARE_SYSTEM_STATUS, ss, 0);
         m5::utility::delay(1);
-    } while (!ss && m5::utility::millis() <= timeout_at);
+    } while (!ss && !m5::utility::hasElapsed(start_at, 1000));
     return ss != 0;
 }
 
@@ -397,6 +413,11 @@ bool UnitVL53L1X::writeDistanceMode(const Distance d)
 {
     Timing tb{};
     if (readTimingBudget(tb)) {
+        // Check before writing the registers, so a rejected change does not leave the sensor half-configured
+        if (tb == Timing::Budget15ms && d == Distance::Long) {
+            M5_LIB_LOGW("Long mode CANNOT set 15ms");
+            return false;
+        }
         bool ret{};
         switch (d) {
             case Distance::Short:
@@ -439,16 +460,16 @@ bool UnitVL53L1X::calibrateOffset(int16_t& offset, const uint16_t targetmm)
         return false;
     }
 
-    uint32_t avg{}, avg_count{};
     if (writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeTimed))) {
+        uint32_t avg{}, avg_count{};
         uint32_t cnt{50};
         while (cnt--) {
-            auto timeout_at = m5::utility::millis() + 1000;
+            const auto start_at = m5::utility::millis();
             bool ready{};
             do {
                 ready = read_data_ready_status();
                 m5::utility::delay(1);
-            } while (!ready && m5::utility::millis() <= timeout_at);
+            } while (!ready && !m5::utility::hasElapsed(start_at, 1000));
             if (ready) {
                 uint16_t distance{};
                 if (readRegister16BE(RESULT_FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0, distance, 0)) {
@@ -474,12 +495,8 @@ bool UnitVL53L1X::readOffset(int16_t& offset)
 {
     uint16_t v{};
     if (readRegister16BE(ALGO_PART_TO_PART_RANGE_OFFSET_MM, v, 0)) {
-        // 11.2 to int16
-        v >>= 2;
-        if (v & 0x0400) {  // Sign extension
-            v |= 0xFC00;
-        }
-        offset = static_cast<int16_t>(v);
+        // 11.2 to int16 (sign-extend the 11-bit integer part)
+        offset = m5::utility::unsigned_to_signed<11>(static_cast<uint16_t>(v >> 2));
         return true;
     }
     return false;
@@ -502,18 +519,18 @@ bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
 {
     xtalk = 0;
 
-    float avg{}, avg_signal_rate{}, avg_spad{};
-    uint_fast8_t avg_count{}, avg_signal_rate_count{}, avg_spad_count{};
-
     if (writeRegister16BE(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, 0x0000) &&
         writeRegister8(SYSTEM_MODE_START, m5::stl::to_underlying(SystemMode::RangeTimed))) {
+        float avg{}, avg_signal_rate{}, avg_spad{};
+        uint_fast8_t avg_count{}, avg_signal_rate_count{}, avg_spad_count{};
         uint32_t cnt{50};
         while (cnt--) {
-            auto timeout_at = m5::utility::millis() + 1000;
+            const auto start_at = m5::utility::millis();
             bool ready{};
             do {
                 ready = read_data_ready_status();
-            } while (!ready && m5::utility::millis() <= timeout_at);
+                m5::utility::delay(1);
+            } while (!ready && !m5::utility::hasElapsed(start_at, 1000));
             if (ready) {
                 uint16_t distance{}, sr{}, spad_nb{};
                 if (readRegister16BE(RESULT_FINAL_CROSSTALK_CORRECTED_RANGE_MM_SD0, distance, 0)) {
@@ -521,11 +538,11 @@ bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
                     ++avg_count;
                 }
                 if (readRegister16BE(RESULT_PEAK_SIGNAL_COUNT_RATE_CROSSTALK_CORRECTED_MCPS_SD0, sr, 0)) {
-                    avg_signal_rate += sr;
+                    avg_signal_rate += sr * 8;  // kcps (same as ULD GetSignalRate)
                     ++avg_signal_rate_count;
                 }
                 if (readRegister16BE(RESULT_DSS_ACTUAL_EFFECTIVE_SPADS_SD0, spad_nb, 0)) {
-                    avg_spad += spad_nb;
+                    avg_spad += (spad_nb >> 8);  // number of SPADs (same as ULD GetSpadNb)
                     ++avg_spad_count;
                 }
                 writeRegister8(SYSTEM_INTERRUPT_CLEAR, 0x01);
@@ -547,15 +564,10 @@ bool UnitVL53L1X::calibrateXtalk(uint16_t& xtalk, const uint16_t targetmm)
         if (targetmm == 0 || avg_spad == 0.f) {
             return false;
         }
-        uint32_t tmp = static_cast<uint32_t>(512 * (avg_signal_rate * (1 - (avg / targetmm))) / avg_spad);
-
-        if (tmp > 65535) {
-            tmp = 65535;
-        }
-        // tmp *= 1000;
-        // tmp >>= 9;
-        // xtalk = tmp;
-        xtalk = static_cast<uint16_t>((tmp * 1000) >> 9);
+        // Negative when the measured distance is longer than the target; clamp to 0..65535 before the integer cast
+        const float calc   = 512 * (avg_signal_rate * (1 - (avg / targetmm))) / avg_spad;
+        const uint32_t tmp = (calc <= 0.0f) ? 0U : (calc >= 65535.0f) ? 65535U : static_cast<uint32_t>(calc);
+        xtalk              = static_cast<uint16_t>((tmp * 1000) >> 9);
         M5_LIB_LOGV("%x -> %u", tmp, xtalk);
         return writeXtalk(xtalk);
     }
@@ -567,8 +579,8 @@ bool UnitVL53L1X::readXtalk(uint16_t& xtalk)
     xtalk = 0;
     uint16_t v{};
     if (readRegister16BE(ALGO_CROSSTALK_COMPENSATION_PLANE_OFFSET_KCPS, v, 0)) {
-        uint32_t t = v;
-        xtalk      = (t * 1000 + 0x1FF) >> 9;  // ceiled
+        const uint32_t t = v;
+        xtalk            = (t * 1000 + 0x1FF) >> 9;  // ceiled
         return true;
     }
     return false;
@@ -626,8 +638,12 @@ bool UnitVL53L1X::readTimingBudget(vl53l1x::Timing& tb)
 
 bool UnitVL53L1X::write_timing_budget(const Timing tb, const Distance dist)
 {
-    if (tb == Timing::BudgetUnknown || dist == Distance::Unknown) {
-        M5_LIB_LOGE("Illegal arg or status %u/%u", tb, dist);
+    // Also rejects Unknown (-1) and values out of the enums
+    const auto tb_idx   = m5::stl::to_underlying(tb);
+    const auto dist_idx = m5::stl::to_underlying(dist);
+    if (tb_idx < 0 || static_cast<size_t>(tb_idx) >= m5::stl::size(tb_table[0]) || dist_idx < 0 ||
+        static_cast<size_t>(dist_idx) >= m5::stl::size(tb_table)) {
+        M5_LIB_LOGE("Illegal arg or status %d/%d", tb_idx, dist_idx);
         return false;
     }
     if (tb == Timing::Budget15ms && dist == Distance::Long) {
@@ -635,10 +651,8 @@ bool UnitVL53L1X::write_timing_budget(const Timing tb, const Distance dist)
         return false;
     }
 
-    if (writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_A_HI,
-                          tb_table[m5::stl::to_underlying(dist)][m5::stl::to_underlying(tb)][0]) &&
-        writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_B_HI,
-                          tb_table[m5::stl::to_underlying(dist)][m5::stl::to_underlying(tb)][1])) {
+    if (writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_A_HI, tb_table[dist_idx][tb_idx][0]) &&
+        writeRegister16BE(RANGE_CONFIG_TIMEOUT_MACROP_B_HI, tb_table[dist_idx][tb_idx][1])) {
         _tb = tb;
         return true;
     }
@@ -653,7 +667,11 @@ bool UnitVL53L1X::readInterMeasurementPeriod(uint16_t& ms)
     if (readRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, tmp32, 0) &&
         readRegister16BE(RESULT_OSC_CALIBRATE_VAL, cpll, 0)) {
         cpll &= 0x3FF;
-        ms = static_cast<uint16_t>(tmp32 / (cpll * 1.065f) + 0.5f);
+        if (!cpll) {
+            M5_LIB_LOGE("Invalid OSC calibrate value");
+            return false;
+        }
+        ms = static_cast<uint16_t>(tmp32 / (cpll * IMP_FACTOR) + 0.5f);
         return true;
     }
     return false;
@@ -664,8 +682,11 @@ bool UnitVL53L1X::writeInterMeasurementPeriod(const uint16_t ms)
     uint16_t cpll{};
     if (readRegister16BE(RESULT_OSC_CALIBRATE_VAL, cpll, 0)) {
         cpll &= 0x3FF;
-
-        uint32_t tmp32 = static_cast<uint32_t>(cpll * ms * 1.065f);
+        if (!cpll) {
+            M5_LIB_LOGE("Invalid OSC calibrate value");
+            return false;
+        }
+        const uint32_t tmp32 = static_cast<uint32_t>(cpll * ms * IMP_FACTOR);
 
         if (writeRegister32BE(SYSTEM_INTERMEASUREMENT_PERIOD, tmp32)) {
             _interval = ms;
@@ -749,7 +770,7 @@ bool UnitVL53L1X::writeROI(const uint8_t wid, const uint8_t hgt)
     uint8_t center = roi_region[y * 16 + x];
 #endif
 
-    uint8_t v = (wid - 1) | ((hgt - 1) << 4);
+    const uint8_t v = (wid - 1) | ((hgt - 1) << 4);
     return ((wid > 10 || hgt > 10) ? writeROICenter(199) : true) &&
            writeRegister8(ROI_CONFIG_USER_ROI_REQUESTED_GLOBAL_XY_SIZE, v);
 }

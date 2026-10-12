@@ -12,6 +12,6 @@
 #ifdef __cplusplus
 #include "M5UnitUnifiedTOF.hpp"
 #else
-#error M5UnitUnifiedToF requires a C++ compiler, please change file extension to .cc or .cpp
+#error M5UnitUnifiedTOF requires a C++ compiler, please change file extension to .cc or .cpp
 #endif
 #endif

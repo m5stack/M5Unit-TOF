@@ -10,13 +10,13 @@
 // Choose one define symbol to match the unit you are using
 // *************************************************************
 #if !defined(USING_UNIT_TOF) && !defined(USING_UNIT_TOF4M) && !defined(USING_HAT_TOF) && !defined(USING_UNIT_TOF90)
-// For UnitToF
+// For UnitToF (U010)
 // #define USING_UNIT_TOF
-// For UnitToF4M
+// For UnitToF4M (U172)
 // #define USING_UNIT_TOF4M
-// For HatToF
+// For HatToF (U072)
 // #define USING_HAT_TOF
-// For UnitToF90
+// For UnitToF90 (U196)
 // #define USING_UNIT_TOF90
 #endif
 // *************************************************************

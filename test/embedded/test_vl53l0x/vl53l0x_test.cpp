@@ -13,7 +13,10 @@
 #include <googletest/test_template.hpp>
 #include <googletest/test_helper.hpp>
 #include <unit/unit_VL53L0X.hpp>
+#include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <string>
 #include <esp_random.h>
 
 using namespace m5::unit::googletest;
@@ -48,6 +51,7 @@ I2cPins get_hat_pins(const m5::board_t board)
 #endif
 
 namespace {
+#if 0  // For debugging
 void i2c_scan(TwoWire& wire)
 {
     M5_LOGI("I2C scan start");
@@ -59,6 +63,7 @@ void i2c_scan(TwoWire& wire)
     }
     M5_LOGI("I2C scan end");
 }
+#endif
 }  // namespace
 
 class TestVL53L0X : public I2CComponentTestBase<UnitVL53L0X> {
@@ -78,7 +83,11 @@ protected:
 #if defined(USING_HAT_TOF)
         auto board      = M5.getBoard();
         const auto pins = hat::get_hat_pins(board);
-        auto& wire      = (board == m5::board_t::board_ArduinoNessoN1) ? Wire1 : Wire;
+        if (pins.sda < 0 || pins.scl < 0) {
+            M5_LOGE("Unsupported board for HatToF");
+            return false;
+        }
+        auto& wire = (board == m5::board_t::board_ArduinoNessoN1) ? Wire1 : Wire;
         wire.end();
         wire.begin(pins.sda, pins.scl, unit->component_config().clock);
         // i2c_scan(wire);
@@ -107,11 +116,72 @@ namespace {
 constexpr Mode mode_table[]         = {Mode::Default, Mode::HighAccuracy, Mode::LongRange, Mode::HighSpeed};
 constexpr const char* mode_string[] = {"Default", "Acc", "Long", "Speed"};
 
+// Number of single-shot measurements per mode
+constexpr size_t SINGLESHOT_COUNT{32};
+// Tests named *WithTarget need a matte object placed at this distance in front of the sensor.
+// They FAIL (not skip) without it, so that a forgotten object is noticed.
+// Distance from the sensor face. E.g. with the unit lying on the desk, put the object on two M5 Cores stacked on
+// each side (2 x 54 mm = 108 mm above the desk, about 100 mm from the sensor face)
+constexpr uint16_t TARGET_DISTANCE_MM{100};
+
+// "status:range" of each measurement, for failure messages
+std::string describe(const std::vector<vl53l0x::Data>& results)
+{
+    std::string s;
+    for (auto&& r : results) {
+        char buf[16]{};
+        snprintf(buf, sizeof(buf), "%u:%d ", static_cast<unsigned>(m5::stl::to_underlying(r.range_status())),
+                 r.range());
+        s += buf;
+    }
+    return s;
+}
+
+std::vector<vl53l0x::Data> measure_singleshots(UnitVL53L0X* unit)
+{
+    std::vector<vl53l0x::Data> results;
+    vl53l0x::Data data{};
+    size_t cnt{SINGLESHOT_COUNT};
+    while (cnt--) {
+        EXPECT_TRUE(unit->measureSingleshot(data));
+        results.push_back(data);
+    }
+    return results;
+}
+
+// Without a target: every measurement completes and the sensor reports no hardware failure
+void check_singleshot_results(const std::vector<vl53l0x::Data>& results)
+{
+    EXPECT_EQ(results.size(), SINGLESHOT_COUNT);
+    EXPECT_TRUE(std::none_of(results.begin(), results.end(), [](const vl53l0x::Data& r) {
+        return r.range_status() == vl53l0x::RangeStatus::HardwareFailure;
+    })) << describe(results);
+}
+
+// With a target: judged by the status, not by the value changing (a stable target can give the same value)
+// - At least half of them must be valid
+// - A valid measurement must not report 0 mm (it does when the object is too close or glossy; use a matte object)
+void check_singleshot_results_with_target(const std::vector<vl53l0x::Data>& results)
+{
+    EXPECT_EQ(results.size(), SINGLESHOT_COUNT);
+    const auto valid_count =
+        std::count_if(results.begin(), results.end(), [](const vl53l0x::Data& r) { return r.valid(); });
+    EXPECT_GE(static_cast<size_t>(valid_count) * 2, results.size())
+        << "No target? Place a matte object " << TARGET_DISTANCE_MM << " mm away. " << describe(results);
+    EXPECT_TRUE(
+        std::all_of(results.begin(), results.end(), [](const vl53l0x::Data& r) { return !r.valid() || r.range() > 0; }))
+        << "0 mm while valid: object too close or glossy? " << describe(results);
+}
+
 }  // namespace
 
-TEST_F(TestVL53L0X, CheckConfig)
+TEST_F(TestVL53L0X, BeginAppliesConfig)
 {
     SCOPED_TRACE(ustr);
+
+    const auto cfg = unit->config();
+    EXPECT_EQ(unit->inPeriodic(), cfg.start_periodic);
+    EXPECT_EQ(unit->mode(), cfg.mode);
 }
 
 TEST_F(TestVL53L0X, SignalRateLimitAndReset)
@@ -120,6 +190,7 @@ TEST_F(TestVL53L0X, SignalRateLimitAndReset)
 
     EXPECT_FALSE(unit->writeSignalRateLimit(512.f));
     EXPECT_FALSE(unit->writeSignalRateLimit(-0.000001f));
+    EXPECT_FALSE(unit->writeSignalRateLimit(NAN));
 
     uint32_t cnt{32};
     float mcps{}, tmp{};
@@ -138,6 +209,30 @@ TEST_F(TestVL53L0X, SignalRateLimitAndReset)
     EXPECT_FLOAT_EQ(tmp, 0.25f);
 }
 
+// The reset waits for MODEL_ID (as ST VL53L0X_ResetDevice), so repeated resets must not fail
+TEST_F(TestVL53L0X, RepeatedReset)
+{
+    SCOPED_TRACE(ustr);
+
+    constexpr uint32_t REPEAT{20};
+    for (uint32_t i = 0; i < REPEAT; ++i) {
+        SCOPED_TRACE(i);
+        EXPECT_TRUE(unit->stopPeriodicMeasurement());
+        EXPECT_TRUE(unit->begin());
+    }
+    for (uint32_t i = 0; i < REPEAT; ++i) {
+        SCOPED_TRACE(i);
+        EXPECT_TRUE(unit->softReset());
+        float mcps{};
+        EXPECT_TRUE(unit->readSignalRateLimit(mcps));
+        EXPECT_FLOAT_EQ(mcps, 0.25f);
+    }
+
+    Data d{};
+    EXPECT_FALSE(unit->inPeriodic());
+    EXPECT_TRUE(unit->measureSingleshot(d));
+}
+
 TEST_F(TestVL53L0X, Singleshot)
 {
     SCOPED_TRACE(ustr);
@@ -148,24 +243,23 @@ TEST_F(TestVL53L0X, Singleshot)
     EXPECT_FALSE(unit->inPeriodic());
 
     for (auto&& m : mode_table) {
-        std::vector<uint16_t> results;
-
         SCOPED_TRACE(mode_string[m5::stl::to_underlying(m)]);
-
         EXPECT_TRUE(unit->writeMode(m));
+        EXPECT_EQ(unit->mode(), m);
+        check_singleshot_results(measure_singleshots(unit.get()));
+    }
+}
 
-        uint32_t cnt{32};
-        while (cnt--) {
-            EXPECT_TRUE(unit->measureSingleshot(d));
-            results.push_back(d.range());
-        }
+// NOTICE: Needs a matte object placed TARGET_DISTANCE_MM in front of the sensor
+TEST_F(TestVL53L0X, SingleshotWithTarget)
+{
+    SCOPED_TRACE(ustr);
 
-        EXPECT_FALSE(results.empty());
-        EXPECT_EQ(results.size(), 32U);
-        if (!results.empty()) {
-            uint16_t v = results.front();
-            EXPECT_FALSE(std::all_of(results.begin(), results.end(), [&v](const uint16_t x) { return x == v; })) << v;
-        }
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    for (auto&& m : mode_table) {
+        SCOPED_TRACE(mode_string[m5::stl::to_underlying(m)]);
+        EXPECT_TRUE(unit->writeMode(m));
+        check_singleshot_results_with_target(measure_singleshots(unit.get()));
     }
 }
 
@@ -230,23 +324,23 @@ TEST_F(TestVL53L0X, ChangeI2CAddress)
     EXPECT_FALSE(unit->changeI2CAddress(0x07));  // Invalid
     EXPECT_FALSE(unit->changeI2CAddress(0x78));  // Invalid
 
-    // Change to 0x10
-    EXPECT_TRUE(unit->changeI2CAddress(0x10));
+    // Change to 0x0A (addresses unused by M5 products: docs.m5stack.com/en/product_i2c_addr)
+    EXPECT_TRUE(unit->changeI2CAddress(0x0A));
     EXPECT_TRUE(unit->readI2CAddress(addr));
-    EXPECT_EQ(addr, 0x10);
-    EXPECT_EQ(unit->address(), 0x10);
+    EXPECT_EQ(addr, 0x0A);
+    EXPECT_EQ(unit->address(), 0x0A);
 
-    // Change to 0x77
-    EXPECT_TRUE(unit->changeI2CAddress(0x77));
+    // Change to 0x74
+    EXPECT_TRUE(unit->changeI2CAddress(0x74));
     EXPECT_TRUE(unit->readI2CAddress(addr));
-    EXPECT_EQ(addr, 0x77);
-    EXPECT_EQ(unit->address(), 0x77);
+    EXPECT_EQ(addr, 0x74);
+    EXPECT_EQ(unit->address(), 0x74);
 
-    // Change to 0x52
-    EXPECT_TRUE(unit->changeI2CAddress(0x52));
+    // Change to 0x5B
+    EXPECT_TRUE(unit->changeI2CAddress(0x5B));
     EXPECT_TRUE(unit->readI2CAddress(addr));
-    EXPECT_EQ(addr, 0x52);
-    EXPECT_EQ(unit->address(), 0x52);
+    EXPECT_EQ(addr, 0x5B);
+    EXPECT_EQ(unit->address(), 0x5B);
 
     // Change to default
     EXPECT_TRUE(unit->changeI2CAddress(UnitVL53L0X::DEFAULT_ADDRESS));
@@ -255,10 +349,45 @@ TEST_F(TestVL53L0X, ChangeI2CAddress)
     EXPECT_EQ(unit->address(), +UnitVL53L0X::DEFAULT_ADDRESS);
 
     // Verify softReset restores default address
-    EXPECT_TRUE(unit->changeI2CAddress(0x10));
-    EXPECT_EQ(unit->address(), 0x10);
+    EXPECT_TRUE(unit->changeI2CAddress(0x0A));
+    EXPECT_EQ(unit->address(), 0x0A);
     EXPECT_TRUE(unit->softReset());
     EXPECT_EQ(unit->address(), +UnitVL53L0X::DEFAULT_ADDRESS);
     EXPECT_TRUE(unit->readI2CAddress(addr));
     EXPECT_EQ(addr, +UnitVL53L0X::DEFAULT_ADDRESS);
+}
+
+// begin() resets the sensor, which reverts its I2C address to the default; begin() must keep the address in use
+TEST_F(TestVL53L0X, BeginAfterChangeI2CAddress)
+{
+    SCOPED_TRACE(ustr);
+
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->changeI2CAddress(0x2A));
+    EXPECT_TRUE(unit->begin());
+    EXPECT_EQ(unit->address(), 0x2A);
+
+    uint8_t addr{};
+    EXPECT_TRUE(unit->readI2CAddress(addr));
+    EXPECT_EQ(addr, 0x2A);
+
+    Data d{};
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->measureSingleshot(d));
+
+    EXPECT_TRUE(unit->changeI2CAddress(UnitVL53L0X::DEFAULT_ADDRESS));
+}
+
+// begin() resumes a sensor held in reset (a reset whose resume was not written, e.g. by an interrupted program)
+TEST_F(TestVL53L0X, BeginResumesHeldReset)
+{
+    SCOPED_TRACE(ustr);
+
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->writeRegister8(m5::unit::vl53l0x::command::SOFT_RESET, 0x00));
+    EXPECT_TRUE(unit->begin());
+
+    Data d{};
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->measureSingleshot(d));
 }

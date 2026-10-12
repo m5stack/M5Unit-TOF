@@ -13,7 +13,10 @@
 #include <googletest/test_template.hpp>
 #include <googletest/test_helper.hpp>
 #include <unit/unit_VL53L1X.hpp>
+#include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <string>
 #include <esp_random.h>
 
 using namespace m5::unit::googletest;
@@ -22,6 +25,7 @@ using namespace m5::unit::vl53l1x;
 using namespace m5::unit::vl53l1x::command;
 
 namespace {
+#if 0  // For debugging
 void i2c_scan(TwoWire& wire)
 {
     M5_LOGI("I2C scan start");
@@ -33,6 +37,7 @@ void i2c_scan(TwoWire& wire)
     }
     M5_LOGI("I2C scan end");
 }
+#endif
 }  // namespace
 
 class TestVL53L1X : public I2CComponentTestBase<UnitVL53L1X> {
@@ -77,23 +82,88 @@ constexpr Timing tb_table[] = {
 
 constexpr Window window_table[] = {Window::Below, Window::Beyond, Window::Out, Window::In, Window::Regular};
 
+// Number of single-shot measurements per mode
+constexpr size_t SINGLESHOT_COUNT{32};
+// Tests named *WithTarget need a matte object placed at this distance in front of the sensor.
+// They FAIL (not skip) without it, so that a forgotten object is noticed.
+// Distance from the sensor face. E.g. with the unit lying on the desk, put the object on two M5 Cores stacked on
+// each side (2 x 54 mm = 108 mm above the desk, about 100 mm from the sensor face)
+constexpr uint16_t TARGET_DISTANCE_MM{100};
+
+// "status:range" of each measurement, for failure messages
+std::string describe(const std::vector<vl53l1x::Data>& results)
+{
+    std::string s;
+    for (auto&& r : results) {
+        char buf[16]{};
+        snprintf(buf, sizeof(buf), "%u:%d ", static_cast<unsigned>(m5::stl::to_underlying(r.range_status())),
+                 r.range());
+        s += buf;
+    }
+    return s;
+}
+
+std::vector<vl53l1x::Data> measure_singleshots(UnitVL53L1X* unit)
+{
+    std::vector<vl53l1x::Data> results;
+    vl53l1x::Data data{};
+    size_t cnt{SINGLESHOT_COUNT};
+    while (cnt--) {
+        EXPECT_TRUE(unit->measureSingleshot(data));
+        results.push_back(data);
+    }
+    return results;
+}
+
+// Without a target: every measurement completes and the sensor reports no hardware failure
+void check_singleshot_results(const std::vector<vl53l1x::Data>& results)
+{
+    EXPECT_EQ(results.size(), SINGLESHOT_COUNT);
+    EXPECT_TRUE(std::none_of(results.begin(), results.end(), [](const vl53l1x::Data& r) {
+        return r.range_status() == vl53l1x::RangeStatus::HardwareFailure;
+    })) << describe(results);
+}
+
+// With a target: judged by the status, not by the value changing (a stable target can give the same value)
+// - At least half of them must be valid
+// - A valid measurement must not report 0 mm (it does when the object is too close or glossy; use a matte object)
+void check_singleshot_results_with_target(const std::vector<vl53l1x::Data>& results)
+{
+    EXPECT_EQ(results.size(), SINGLESHOT_COUNT);
+    const auto valid_count =
+        std::count_if(results.begin(), results.end(), [](const vl53l1x::Data& r) { return r.valid(); });
+    EXPECT_GE(static_cast<size_t>(valid_count) * 2, results.size())
+        << "No target? Place a matte object " << TARGET_DISTANCE_MM << " mm away. " << describe(results);
+    EXPECT_TRUE(
+        std::all_of(results.begin(), results.end(), [](const vl53l1x::Data& r) { return !r.valid() || r.range() > 0; }))
+        << "0 mm while valid: object too close or glossy? " << describe(results);
+}
+
 }  // namespace
 
-TEST_F(TestVL53L1X, CheckConfig)
+TEST_F(TestVL53L1X, BeginAppliesConfig)
 {
     SCOPED_TRACE(ustr);
+
+    const auto cfg = unit->config();
+    EXPECT_EQ(unit->inPeriodic(), cfg.start_periodic);
+
+    Distance d{};
+    EXPECT_TRUE(unit->readDistanceMode(d));
+    EXPECT_EQ(d, cfg.distance);
+    EXPECT_EQ(unit->distanceMode(), cfg.distance);
+
+    Timing tb{};
+    EXPECT_TRUE(unit->readTimingBudget(tb));
+    EXPECT_EQ(tb, cfg.timing_budget);
+    EXPECT_EQ(unit->timingBudget(), cfg.timing_budget);
 }
 
 TEST_F(TestVL53L1X, Offset)
 {
     SCOPED_TRACE(ustr);
 
-    int16_t offset{}, offset2{};
-    // NOTICE: The presence of detectable objects in the vicinity of the specified distance!
-    EXPECT_TRUE(unit->calibrateOffset(offset, 140));
-    EXPECT_TRUE(unit->readOffset(offset2));
-    EXPECT_EQ(offset, offset2);
-
+    int16_t offset2{};
     EXPECT_FALSE(unit->writeOffset(-1025));
     EXPECT_TRUE(unit->writeOffset(-1024));
     EXPECT_TRUE(unit->readOffset(offset2));
@@ -121,12 +191,7 @@ TEST_F(TestVL53L1X, Xtalk)
 {
     SCOPED_TRACE(ustr);
 
-    uint16_t xtalk{}, xtalk2{};
-    // NOTICE: The presence of detectable objects in the vicinity of the specified distance!
-    EXPECT_TRUE(unit->calibrateXtalk(xtalk, 140));
-    EXPECT_TRUE(unit->readXtalk(xtalk2));
-    EXPECT_EQ((xtalk << 9) / 1000, (xtalk2 << 9) / 1000) << xtalk << "/" << xtalk2;
-
+    uint16_t xtalk2{};
     uint32_t cnt{32};
     while (cnt--) {
         uint16_t x = esp_random() & 0xFFFF;
@@ -141,11 +206,62 @@ TEST_F(TestVL53L1X, Xtalk)
     EXPECT_EQ(0, xtalk2);
 }
 
+// NOTICE: Needs a matte object placed TARGET_DISTANCE_MM in front of the sensor
+TEST_F(TestVL53L1X, CalibrationWithTarget)
+{
+    SCOPED_TRACE(ustr);
+
+    // calibrateOffset() / calibrateXtalk() do not check the range status, so they also "succeed" without a target.
+    // Check the target first so that a missing object fails here.
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    check_singleshot_results_with_target(measure_singleshots(unit.get()));
+
+    int16_t offset{}, offset2{};
+    EXPECT_TRUE(unit->calibrateOffset(offset, TARGET_DISTANCE_MM))
+        << "No target? Place a matte object " << TARGET_DISTANCE_MM << " mm away";
+    EXPECT_TRUE(unit->readOffset(offset2));
+    EXPECT_EQ(offset, offset2);
+
+    // UM2510: calibrate the crosstalk with the offset applied
+    uint16_t xtalk{}, xtalk2{};
+    EXPECT_TRUE(unit->calibrateXtalk(xtalk, TARGET_DISTANCE_MM))
+        << "No target? Place a matte object " << TARGET_DISTANCE_MM << " mm away";
+    EXPECT_TRUE(unit->readXtalk(xtalk2));
+    EXPECT_EQ((xtalk << 9) / 1000, (xtalk2 << 9) / 1000) << xtalk << "/" << xtalk2;
+    EXPECT_TRUE(unit->writeXtalk(0));
+    EXPECT_TRUE(unit->writeOffset(0));
+}
+
+// Long mode cannot use the 15 ms budget: the change must be rejected before any register is written
+TEST_F(TestVL53L1X, DistanceModeLongRejectsBudget15ms)
+{
+    SCOPED_TRACE(ustr);
+
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->writeDistanceMode(Distance::Short));
+    EXPECT_TRUE(unit->writeTimingBudget(Timing::Budget15ms));
+
+    EXPECT_FALSE(unit->writeDistanceMode(Distance::Long));
+
+    Distance d{};
+    Timing tb{};
+    EXPECT_TRUE(unit->readDistanceMode(d));
+    EXPECT_TRUE(unit->readTimingBudget(tb));
+    EXPECT_EQ(d, Distance::Short);
+    EXPECT_EQ(unit->distanceMode(), Distance::Short);
+    EXPECT_EQ(tb, Timing::Budget15ms);
+    EXPECT_EQ(unit->timingBudget(), Timing::Budget15ms);
+}
+
 TEST_F(TestVL53L1X, DistanceAndTimingBudget)
 {
     SCOPED_TRACE(ustr);
 
-    // distance -> tb loop
+    // Values out of the enum are rejected
+    EXPECT_FALSE(unit->writeTimingBudget(static_cast<Timing>(7)));
+    EXPECT_FALSE(unit->writeTimingBudget(Timing::BudgetUnknown));
+
+    // For each distance mode, write every timing budget
     for (auto&& d : distance_table) {
         Distance dd{};
         EXPECT_TRUE(unit->writeDistanceMode(d));
@@ -168,7 +284,7 @@ TEST_F(TestVL53L1X, DistanceAndTimingBudget)
         }
     }
 
-    // tb -> distance loop;
+    // For each timing budget, change the distance mode and check the budget is kept
     for (auto&& tb : tb_table) {
         Timing tb2{};
         // to short
@@ -206,7 +322,7 @@ TEST_F(TestVL53L1X, DistanceAndTimingBudget)
     {
         uint32_t cnt{32};
         while (cnt--) {
-            uint16_t ms = esp_random() % 0xFFFF;
+            uint16_t ms = esp_random() & 0xFFFF;
             auto s      = m5::utility::formatString("IMP:%u", ms);
             SCOPED_TRACE(s);
             EXPECT_TRUE(unit->writeInterMeasurementPeriod(ms)) << ms;
@@ -238,6 +354,9 @@ TEST_F(TestVL53L1X, Reset)
     EXPECT_TRUE(unit->writeXtalk(456));
 
     EXPECT_TRUE(unit->softReset());  // DO!
+    // Cached settings are cleared too (the sensor is back to its defaults)
+    EXPECT_EQ(unit->distanceMode(), Distance::Unknown);
+    EXPECT_EQ(unit->timingBudget(), Timing::BudgetUnknown);
 
     Distance d{};
     Timing tb{};
@@ -292,23 +411,22 @@ TEST_F(TestVL53L1X, SingleShot)
     EXPECT_FALSE(unit->inPeriodic());
 
     for (auto&& d : distance_table) {
-        std::vector<uint16_t> results;
         SCOPED_TRACE(d == Distance::Long ? "Long" : "Short");
-
         EXPECT_TRUE(unit->writeDistanceMode(d));
+        check_singleshot_results(measure_singleshots(unit.get()));
+    }
+}
 
-        uint32_t cnt{32};
-        while (cnt--) {
-            EXPECT_TRUE(unit->measureSingleshot(data));
-            results.push_back(data.range());
-        }
+// NOTICE: Needs a matte object placed TARGET_DISTANCE_MM in front of the sensor
+TEST_F(TestVL53L1X, SingleShotWithTarget)
+{
+    SCOPED_TRACE(ustr);
 
-        EXPECT_FALSE(results.empty());
-        EXPECT_EQ(results.size(), 32U);
-        if (!results.empty()) {
-            uint16_t v = results.front();
-            EXPECT_FALSE(std::all_of(results.begin(), results.end(), [&v](const uint16_t x) { return x == v; })) << v;
-        }
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    for (auto&& d : distance_table) {
+        SCOPED_TRACE(d == Distance::Long ? "Long" : "Short");
+        EXPECT_TRUE(unit->writeDistanceMode(d));
+        check_singleshot_results_with_target(measure_singleshots(unit.get()));
     }
 }
 
@@ -344,6 +462,13 @@ TEST_F(TestVL53L1X, ROI)
             }
         }
     }
+
+    // A smaller ROI written after a large one keeps the center set by the large one (199)
+    EXPECT_TRUE(unit->writeROI(16, 16));
+    EXPECT_TRUE(unit->writeROI(4, 4));
+    uint8_t center{};
+    EXPECT_TRUE(unit->readROICenter(center));
+    EXPECT_EQ(center, 199);
 }
 
 TEST_F(TestVL53L1X, Window)
@@ -393,7 +518,8 @@ TEST_F(TestVL53L1X, Periodic)
 
     for (auto&& d : distance_table) {
         for (auto&& tb : tb_table) {
-            auto s = m5::utility::formatString("Dis:%u TB:%u", d, tb);
+            auto s = m5::utility::formatString("Dis:%d TB:%d", static_cast<int>(m5::stl::to_underlying(d)),
+                                               static_cast<int>(m5::stl::to_underlying(tb)));
             SCOPED_TRACE(s.c_str());
             if (d == Distance::Long && tb == Timing::Budget15ms) {
                 continue;
@@ -451,23 +577,23 @@ TEST_F(TestVL53L1X, ChangeI2CAddress)
     EXPECT_FALSE(unit->changeI2CAddress(0x07));  // Invalid
     EXPECT_FALSE(unit->changeI2CAddress(0x78));  // Invalid
 
-    // Change to 0x10
-    EXPECT_TRUE(unit->changeI2CAddress(0x10));
+    // Change to 0x0A (addresses unused by M5 products: docs.m5stack.com/en/product_i2c_addr)
+    EXPECT_TRUE(unit->changeI2CAddress(0x0A));
     EXPECT_TRUE(unit->readI2CAddress(addr));
-    EXPECT_EQ(addr, 0x10);
-    EXPECT_EQ(unit->address(), 0x10);
+    EXPECT_EQ(addr, 0x0A);
+    EXPECT_EQ(unit->address(), 0x0A);
 
-    // Change to 0x77
-    EXPECT_TRUE(unit->changeI2CAddress(0x77));
+    // Change to 0x74
+    EXPECT_TRUE(unit->changeI2CAddress(0x74));
     EXPECT_TRUE(unit->readI2CAddress(addr));
-    EXPECT_EQ(addr, 0x77);
-    EXPECT_EQ(unit->address(), 0x77);
+    EXPECT_EQ(addr, 0x74);
+    EXPECT_EQ(unit->address(), 0x74);
 
-    // Change to 0x52
-    EXPECT_TRUE(unit->changeI2CAddress(0x52));
+    // Change to 0x5B
+    EXPECT_TRUE(unit->changeI2CAddress(0x5B));
     EXPECT_TRUE(unit->readI2CAddress(addr));
-    EXPECT_EQ(addr, 0x52);
-    EXPECT_EQ(unit->address(), 0x52);
+    EXPECT_EQ(addr, 0x5B);
+    EXPECT_EQ(unit->address(), 0x5B);
 
     // Change to default
     EXPECT_TRUE(unit->changeI2CAddress(UnitVL53L1X::DEFAULT_ADDRESS));
@@ -476,10 +602,45 @@ TEST_F(TestVL53L1X, ChangeI2CAddress)
     EXPECT_EQ(unit->address(), +UnitVL53L1X::DEFAULT_ADDRESS);
 
     // Verify softReset restores default address
-    EXPECT_TRUE(unit->changeI2CAddress(0x10));
-    EXPECT_EQ(unit->address(), 0x10);
+    EXPECT_TRUE(unit->changeI2CAddress(0x0A));
+    EXPECT_EQ(unit->address(), 0x0A);
     EXPECT_TRUE(unit->softReset());
     EXPECT_EQ(unit->address(), +UnitVL53L1X::DEFAULT_ADDRESS);
     EXPECT_TRUE(unit->readI2CAddress(addr));
     EXPECT_EQ(addr, +UnitVL53L1X::DEFAULT_ADDRESS);
+}
+
+// begin() resets the sensor, which reverts its I2C address to the default; begin() must keep the address in use
+TEST_F(TestVL53L1X, BeginAfterChangeI2CAddress)
+{
+    SCOPED_TRACE(ustr);
+
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->changeI2CAddress(0x2A));
+    EXPECT_TRUE(unit->begin());
+    EXPECT_EQ(unit->address(), 0x2A);
+
+    uint8_t addr{};
+    EXPECT_TRUE(unit->readI2CAddress(addr));
+    EXPECT_EQ(addr, 0x2A);
+
+    Data d{};
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->measureSingleshot(d));
+
+    EXPECT_TRUE(unit->changeI2CAddress(UnitVL53L1X::DEFAULT_ADDRESS));
+}
+
+// begin() resumes a sensor held in reset (a reset whose resume was not written, e.g. by an interrupted program)
+TEST_F(TestVL53L1X, BeginResumesHeldReset)
+{
+    SCOPED_TRACE(ustr);
+
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->writeRegister8(m5::unit::vl53l1x::command::SOFT_RESET, 0x00));
+    EXPECT_TRUE(unit->begin());
+
+    Data d{};
+    EXPECT_TRUE(unit->stopPeriodicMeasurement());
+    EXPECT_TRUE(unit->measureSingleshot(d));
 }
