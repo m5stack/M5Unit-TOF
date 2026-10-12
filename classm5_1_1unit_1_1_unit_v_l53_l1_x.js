@@ -1,6 +1,8 @@
 var classm5_1_1unit_1_1_unit_v_l53_l1_x =
 [
     [ "config_t", "structm5_1_1unit_1_1_unit_v_l53_l1_x_1_1config__t.html", "structm5_1_1unit_1_1_unit_v_l53_l1_x_1_1config__t" ],
+    [ "UnitVL53L1X", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#addfa5f3c3f1c9145abb5db6b5a9823ea", null ],
+    [ "begin", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a7ef403e93bfd73f888e2687bb292f43e", null ],
     [ "calibrateOffset", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a98574594d768c9819012bf8ad0532249", null ],
     [ "calibrateXtalk", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#aaf38054ca0d655da3bdfd6d0d6a04b3c", null ],
     [ "changeI2CAddress", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a97d4bf5034cc609e98f601f28a75d41e", null ],
@@ -8,7 +10,7 @@ var classm5_1_1unit_1_1_unit_v_l53_l1_x =
     [ "config", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#ae3cc788570c22eab1fe660a9de29a91a", null ],
     [ "config", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#aa6dd9875d3ea966006948d72e2725fde", null ],
     [ "distanceMode", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a867acc58b7c78ba6140b57b0138df563", null ],
-    [ "measureSingleshot", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#ad698aebece66211f70bc26772fba53c9", null ],
+    [ "measureSingleshot", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a9b68b7fadbffd85fab08fa04a942d80e", null ],
     [ "range", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a1bf3052735e54c40fc54efd56bf9ed73", null ],
     [ "range_status", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a4ff53891910c03db54b73c1fa481ec03", null ],
     [ "readDistanceMode", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a572aa3f04e158210ef95158922b5ea4e", null ],
@@ -27,6 +29,7 @@ var classm5_1_1unit_1_1_unit_v_l53_l1_x =
     [ "startPeriodicMeasurement", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a7590983e42fbe1cfb4ee73223fc37229", null ],
     [ "stopPeriodicMeasurement", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#ae222e1f9578b06def07d43789d1b8c80", null ],
     [ "timingBudget", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a57a279ae14eb2e27fca21be7cc94442f", null ],
+    [ "update", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a221b828cfab8a55c86a5898f3ca12c0d", null ],
     [ "valid", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#ad27274e96a19ab4415b63def1c5e8220", null ],
     [ "writeDistanceMode", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a2204a6bdb73cab4f2f734021f0a5b30b", null ],
     [ "writeDistanceThreshold", "classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a641219f62139f22403ea10b408e4b7c3", null ],
