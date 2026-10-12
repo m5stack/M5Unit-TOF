@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-TOF<span id="projectnumber">&#160;0.2.1 git rev:ffeb3c9</span>
+   <div id="projectname">M5Unit-TOF<span id="projectnumber">&#160;0.3.0 git rev:9de70e8</span>
    </div>
   </td>
  </tr>
@@ -110,7 +110,6 @@ $(function(){initNavTree('unit___v_l53_l1_x_8hpp.html',''); initResizable(true);
 <code>#include &lt;m5_utility/container/circular_buffer.hpp&gt;</code><br />
 <code>#include &lt;m5_utility/types.hpp&gt;</code><br />
 <code>#include &lt;array&gt;</code><br />
-<code>#include &lt;limits&gt;</code><br />
 </div>
 <p><a href="unit___v_l53_l1_x_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -129,7 +128,7 @@ Classes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacem5.html">m5</a></td></tr>
-<tr class="memdesc:namespacem5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Top level namespace of M5stack. <br /></td></tr>
+<tr class="memdesc:namespacem5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Top level namespace of M5Stack. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
@@ -139,14 +138,14 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:ab9432fa40f943b466f98f1c303e10f26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Operating condition.  <a href="#ab9432fa40f943b466f98f1c303e10f26">More...</a><br /></td></tr>
 <tr class="separator:ab9432fa40f943b466f98f1c303e10f26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afee946aad3ec5c4b572492ab1d750e29" id="r_afee946aad3ec5c4b572492ab1d750e29"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afee946aad3ec5c4b572492ab1d750e29">m5::unit::vl53l1x::Distance</a> : int8_t { <b>Unknown</b> = -1
+<tr class="memitem:afee946aad3ec5c4b572492ab1d750e29" id="r_afee946aad3ec5c4b572492ab1d750e29"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afee946aad3ec5c4b572492ab1d750e29">m5::unit::vl53l1x::Distance</a> : int8_t { <a class="el" href="#afee946aad3ec5c4b572492ab1d750e29a88183b946cc5f0e8c96b2e66e1c74a7e">Unknown</a> = -1
 , <a class="el" href="#afee946aad3ec5c4b572492ab1d750e29a30bb747c98bccdd11b3f89e644c4d0ad">Short</a>
 , <a class="el" href="#afee946aad3ec5c4b572492ab1d750e29a8394f0347c184cf156ac5924dccb773b">Long</a>
  }</td></tr>
 <tr class="memdesc:afee946aad3ec5c4b572492ab1d750e29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Distance mode.  <a href="#afee946aad3ec5c4b572492ab1d750e29">More...</a><br /></td></tr>
 <tr class="separator:afee946aad3ec5c4b572492ab1d750e29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdef51d8c3a515bcad073456a0386b41" id="r_acdef51d8c3a515bcad073456a0386b41"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acdef51d8c3a515bcad073456a0386b41">m5::unit::vl53l1x::Timing</a> : int8_t { <br />
-&#160;&#160;<b>BudgetUnknown</b> = -1
+&#160;&#160;<a class="el" href="#acdef51d8c3a515bcad073456a0386b41a46189986e42a0325002e6e0175f6ded0">BudgetUnknown</a> = -1
 , <a class="el" href="#acdef51d8c3a515bcad073456a0386b41ac7406029eba7e3733ca45d7e5ac41e73">Budget15ms</a>
 , <a class="el" href="#acdef51d8c3a515bcad073456a0386b41a825b1d30cafaa13c969df969910a4a04">Budget20ms</a>
 , <a class="el" href="#acdef51d8c3a515bcad073456a0386b41a3d185d3725b6c50f0d0e0e073a5e3018">Budget33ms</a>
@@ -159,28 +158,28 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:acdef51d8c3a515bcad073456a0386b41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timing budget for ranging.  <a href="#acdef51d8c3a515bcad073456a0386b41">More...</a><br /></td></tr>
 <tr class="separator:acdef51d8c3a515bcad073456a0386b41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a641b5e77e9e3ea840efb71cbb2552172" id="r_a641b5e77e9e3ea840efb71cbb2552172"><td class="memItemLeft" align="right" valign="top"><a id="a641b5e77e9e3ea840efb71cbb2552172" name="a641b5e77e9e3ea840efb71cbb2552172"></a>enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172">m5::unit::vl53l1x::RangeStatus</a> : uint8_t { <br />
-&#160;&#160;<b>OK</b>
-, <b>SigmaFailure</b>
-, <b>SignalFailure</b>
-, <b>RangeValidMinRangeClipped</b>
+<tr class="memitem:a641b5e77e9e3ea840efb71cbb2552172" id="r_a641b5e77e9e3ea840efb71cbb2552172"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172">m5::unit::vl53l1x::RangeStatus</a> : uint8_t { <br />
+&#160;&#160;<a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172ae0aa021e21dddbd6d8cecec71e9cf564">OK</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a4e34d5e5b7f5000e7e6115cca78f1077">SigmaFailure</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a48dbb6e4e084f01455fd01e5f43a892c">SignalFailure</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a60b1b47176d4d3ec9c04218f4f9d462d">RangeValidMinRangeClipped</a>
 , <br />
-&#160;&#160;<b>OutOfBounds</b>
-, <b>HardwareFailure</b>
-, <b>Unknown6</b>
-, <b>Wraparound</b>
+&#160;&#160;<a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a46dc1018ac1d8fca7c2752a61ce2fd0f">OutOfBounds</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a447f9e0c79abfb4c00b6f3775ff74732">HardwareFailure</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a02ea1a152064e08f0b4d73ac678fd5ec">Unknown6</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a54d665020fa61897ae0dbbc3a987b769">Wraparound</a>
 , <br />
-&#160;&#160;<b>Unknown8</b>
-, <b>XtalkSignalFailure</b>
-, <b>SynchronizationInt</b>
-, <b>Unknown11</b>
+&#160;&#160;<a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a1441440508bb5bf1a9a852dcba5ad59a">Unknown8</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a2dc04d05fe95d3318fd34357e0365cb3">XtalkSignalFailure</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a560ca536e01dfdea43b6cef2333a3412">SynchronizationInt</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a20d7824ddb9c3938cf0aaa6f8ad4db21">Unknown11</a>
 , <br />
-&#160;&#160;<b>Unknown12</b>
-, <b>MinRangeFailure</b>
-, <b>Unknown255</b> = 255
+&#160;&#160;<a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172aecefa5080ae765056ba0aa2b7e049f07">Unknown12</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a2fb01aa79a0c640d7e99b4edf7f34f09">MinRangeFailure</a>
+, <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172a30e18c0831a82d5d8041820425b1ea43">Unknown255</a> = 255
 <br />
  }</td></tr>
-<tr class="memdesc:a641b5e77e9e3ea840efb71cbb2552172"><td class="mdescLeft">&#160;</td><td class="mdescRight">Range status interpretation. <br /></td></tr>
+<tr class="memdesc:a641b5e77e9e3ea840efb71cbb2552172"><td class="mdescLeft">&#160;</td><td class="mdescRight">Range status interpretation.  <a href="#a641b5e77e9e3ea840efb71cbb2552172">More...</a><br /></td></tr>
 <tr class="separator:a641b5e77e9e3ea840efb71cbb2552172"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b8ffe405d64fff2d9c2c03bcf4a276f" id="r_a2b8ffe405d64fff2d9c2c03bcf4a276f"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2b8ffe405d64fff2d9c2c03bcf4a276f">m5::unit::vl53l1x::Window</a> : uint8_t { <br />
 &#160;&#160;<a class="el" href="#a2b8ffe405d64fff2d9c2c03bcf4a276fae59dd8d25c0b6bb6697eac0617ccd412">Below</a>
@@ -219,7 +218,9 @@ Enumerations</h2></td></tr>
 
 <p>Distance mode. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="afee946aad3ec5c4b572492ab1d750e29a30bb747c98bccdd11b3f89e644c4d0ad" name="afee946aad3ec5c4b572492ab1d750e29a30bb747c98bccdd11b3f89e644c4d0ad"></a>Short&#160;</td><td class="fielddoc"><p>Short (limited to 1.3m) </p>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="afee946aad3ec5c4b572492ab1d750e29a88183b946cc5f0e8c96b2e66e1c74a7e" name="afee946aad3ec5c4b572492ab1d750e29a88183b946cc5f0e8c96b2e66e1c74a7e"></a>Unknown&#160;</td><td class="fielddoc"><p>Unknown (not set) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="afee946aad3ec5c4b572492ab1d750e29a30bb747c98bccdd11b3f89e644c4d0ad" name="afee946aad3ec5c4b572492ab1d750e29a30bb747c98bccdd11b3f89e644c4d0ad"></a>Short&#160;</td><td class="fielddoc"><p>Short (limited to 1.3m) </p>
 </td></tr>
 <tr><td class="fieldname"><a id="afee946aad3ec5c4b572492ab1d750e29a8394f0347c184cf156ac5924dccb773b" name="afee946aad3ec5c4b572492ab1d750e29a8394f0347c184cf156ac5924dccb773b"></a>Long&#160;</td><td class="fielddoc"><p>Long (limited to 4.0m) </p>
 </td></tr>
@@ -257,6 +258,62 @@ Enumerations</h2></td></tr>
 
 </div>
 </div>
+<a id="a641b5e77e9e3ea840efb71cbb2552172" name="a641b5e77e9e3ea840efb71cbb2552172"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a641b5e77e9e3ea840efb71cbb2552172">&#9670;&#160;</a></span>RangeStatus</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="#a641b5e77e9e3ea840efb71cbb2552172">m5::unit::vl53l1x::RangeStatus</a> : uint8_t</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Range status interpretation. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172ae0aa021e21dddbd6d8cecec71e9cf564" name="a641b5e77e9e3ea840efb71cbb2552172ae0aa021e21dddbd6d8cecec71e9cf564"></a>OK&#160;</td><td class="fielddoc"><p>Range valid. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a4e34d5e5b7f5000e7e6115cca78f1077" name="a641b5e77e9e3ea840efb71cbb2552172a4e34d5e5b7f5000e7e6115cca78f1077"></a>SigmaFailure&#160;</td><td class="fielddoc"><p>Sigma (standard deviation) above the limit. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a48dbb6e4e084f01455fd01e5f43a892c" name="a641b5e77e9e3ea840efb71cbb2552172a48dbb6e4e084f01455fd01e5f43a892c"></a>SignalFailure&#160;</td><td class="fielddoc"><p>Signal rate below the limit. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a60b1b47176d4d3ec9c04218f4f9d462d" name="a641b5e77e9e3ea840efb71cbb2552172a60b1b47176d4d3ec9c04218f4f9d462d"></a>RangeValidMinRangeClipped&#160;</td><td class="fielddoc"><p>Range valid, but clipped to the minimum range. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a46dc1018ac1d8fca7c2752a61ce2fd0f" name="a641b5e77e9e3ea840efb71cbb2552172a46dc1018ac1d8fca7c2752a61ce2fd0f"></a>OutOfBounds&#160;</td><td class="fielddoc"><p>Phase out of the valid limits. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a447f9e0c79abfb4c00b6f3775ff74732" name="a641b5e77e9e3ea840efb71cbb2552172a447f9e0c79abfb4c00b6f3775ff74732"></a>HardwareFailure&#160;</td><td class="fielddoc"><p>Hardware or VCSEL failure. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a02ea1a152064e08f0b4d73ac678fd5ec" name="a641b5e77e9e3ea840efb71cbb2552172a02ea1a152064e08f0b4d73ac678fd5ec"></a>Unknown6&#160;</td><td class="fielddoc"><p>Unknown (not used) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a54d665020fa61897ae0dbbc3a987b769" name="a641b5e77e9e3ea840efb71cbb2552172a54d665020fa61897ae0dbbc3a987b769"></a>Wraparound&#160;</td><td class="fielddoc"><p>Wrapped target (phase does not match) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a1441440508bb5bf1a9a852dcba5ad59a" name="a641b5e77e9e3ea840efb71cbb2552172a1441440508bb5bf1a9a852dcba5ad59a"></a>Unknown8&#160;</td><td class="fielddoc"><p>Unknown (not used) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a2dc04d05fe95d3318fd34357e0365cb3" name="a641b5e77e9e3ea840efb71cbb2552172a2dc04d05fe95d3318fd34357e0365cb3"></a>XtalkSignalFailure&#160;</td><td class="fielddoc"><p>Crosstalk signal failure. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a560ca536e01dfdea43b6cef2333a3412" name="a641b5e77e9e3ea840efb71cbb2552172a560ca536e01dfdea43b6cef2333a3412"></a>SynchronizationInt&#160;</td><td class="fielddoc"><p>First interrupt after start (synchronization) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a20d7824ddb9c3938cf0aaa6f8ad4db21" name="a641b5e77e9e3ea840efb71cbb2552172a20d7824ddb9c3938cf0aaa6f8ad4db21"></a>Unknown11&#160;</td><td class="fielddoc"><p>Unknown (not used) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172aecefa5080ae765056ba0aa2b7e049f07" name="a641b5e77e9e3ea840efb71cbb2552172aecefa5080ae765056ba0aa2b7e049f07"></a>Unknown12&#160;</td><td class="fielddoc"><p>Unknown (not used) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a2fb01aa79a0c640d7e99b4edf7f34f09" name="a641b5e77e9e3ea840efb71cbb2552172a2fb01aa79a0c640d7e99b4edf7f34f09"></a>MinRangeFailure&#160;</td><td class="fielddoc"><p>Minimum range failure. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a641b5e77e9e3ea840efb71cbb2552172a30e18c0831a82d5d8041820425b1ea43" name="a641b5e77e9e3ea840efb71cbb2552172a30e18c0831a82d5d8041820425b1ea43"></a>Unknown255&#160;</td><td class="fielddoc"><p>Unknown status. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <a id="acdef51d8c3a515bcad073456a0386b41" name="acdef51d8c3a515bcad073456a0386b41"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acdef51d8c3a515bcad073456a0386b41">&#9670;&#160;</a></span>Timing</h2>
 
@@ -282,7 +339,9 @@ Enumerations</h2></td></tr>
 <dd>
 inter-measurement period needs to be set </dd></dl>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="acdef51d8c3a515bcad073456a0386b41ac7406029eba7e3733ca45d7e5ac41e73" name="acdef51d8c3a515bcad073456a0386b41ac7406029eba7e3733ca45d7e5ac41e73"></a>Budget15ms&#160;</td><td class="fielddoc"><p>15 ms (Only possible when Short mode) </p>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="acdef51d8c3a515bcad073456a0386b41a46189986e42a0325002e6e0175f6ded0" name="acdef51d8c3a515bcad073456a0386b41a46189986e42a0325002e6e0175f6ded0"></a>BudgetUnknown&#160;</td><td class="fielddoc"><p>Unknown (not set) </p>
+</td></tr>
+<tr><td class="fieldname"><a id="acdef51d8c3a515bcad073456a0386b41ac7406029eba7e3733ca45d7e5ac41e73" name="acdef51d8c3a515bcad073456a0386b41ac7406029eba7e3733ca45d7e5ac41e73"></a>Budget15ms&#160;</td><td class="fielddoc"><p>15 ms (Only possible when Short mode) </p>
 </td></tr>
 <tr><td class="fieldname"><a id="acdef51d8c3a515bcad073456a0386b41a825b1d30cafaa13c969df969910a4a04" name="acdef51d8c3a515bcad073456a0386b41a825b1d30cafaa13c969df969910a4a04"></a>Budget20ms&#160;</td><td class="fielddoc"><p>20 ms </p>
 </td></tr>
@@ -333,13 +392,13 @@ inter-measurement period needs to be set </dd></dl>
 </ul>
 </li>
 <li>Out<ul>
-<li>ThreshLow &lt; object distance &lt; ThreshHigh: no report</li>
-<li>ThreshLow &gt; object distance &gt; ThreshHigh: report</li>
+<li>ThreshLow &lt;= object distance &lt;= ThreshHigh: no report</li>
+<li>object distance &lt; ThreshLow or object distance &gt; ThreshHigh: report</li>
 </ul>
 </li>
 <li>In<ul>
-<li>ThreshLow &gt; object distance &gt; ThreshHigh: no report</li>
-<li>ThreshLow &lt; object distance &lt; ThreshHigh: report </li>
+<li>object distance &lt; ThreshLow or object distance &gt; ThreshHigh: no report</li>
+<li>ThreshLow &lt;= object distance &lt;= ThreshHigh: report </li>
 </ul>
 </li>
 </ul>

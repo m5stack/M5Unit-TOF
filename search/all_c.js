@@ -1,4 +1,20 @@
 var searchData=
 [
-  ['valid_0',['valid',['../structm5_1_1unit_1_1vl53l0x_1_1_data.html#a73965134273271a0e4d60a80f5a207e2',1,'m5::unit::vl53l0x::Data::valid()'],['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#aaacd287cefca244efc7909098c4cd3bd',1,'m5::unit::UnitVL53L0X::valid()'],['../structm5_1_1unit_1_1vl53l1x_1_1_data.html#a2f124e8e4f35780b94550f230aec3af2',1,'m5::unit::vl53l1x::Data::valid()'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#ad27274e96a19ab4415b63def1c5e8220',1,'m5::unit::UnitVL53L1X::valid()']]]
+  ['unit_0',['unit',['../namespaceunit.html',1,'']]],
+  ['unit_5fvl53l0x_2ecpp_1',['unit_VL53L0X.cpp',['../unit___v_l53_l0_x_8cpp.html',1,'']]],
+  ['unit_5fvl53l0x_2ehpp_2',['unit_VL53L0X.hpp',['../unit___v_l53_l0_x_8hpp.html',1,'']]],
+  ['unit_5fvl53l1x_2ecpp_3',['unit_VL53L1X.cpp',['../unit___v_l53_l1_x_8cpp.html',1,'']]],
+  ['unit_5fvl53l1x_2ehpp_4',['unit_VL53L1X.hpp',['../unit___v_l53_l1_x_8hpp.html',1,'']]],
+  ['unittof_5',['UnitToF',['../_m5_unit_unified_t_o_f_8hpp.html#a097e6f3488b7c27ef4e8cee86592db0c',1,'m5::unit']]],
+  ['unittof4m_6',['UnitToF4M',['../_m5_unit_unified_t_o_f_8hpp.html#a5a206bbf46dd74d5ba54e99344125b01',1,'m5::unit']]],
+  ['unittof90_7',['UnitToF90',['../_m5_unit_unified_t_o_f_8hpp.html#a657245101d148eb19a8f6c3b0d75b40a',1,'m5::unit']]],
+  ['unitvl53l0x_8',['UnitVL53L0X',['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html',1,'m5::unit::UnitVL53L0X'],['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#a1ee92026fb2fd98ae672a943338d0238',1,'m5::unit::UnitVL53L0X::UnitVL53L0X()']]],
+  ['unitvl53l1x_9',['UnitVL53L1X',['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html',1,'m5::unit::UnitVL53L1X'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#addfa5f3c3f1c9145abb5db6b5a9823ea',1,'m5::unit::UnitVL53L1X::UnitVL53L1X()']]],
+  ['unknown_10',['Unknown',['../unit___v_l53_l0_x_8hpp.html#a519d2071a932167500d19d94ffef076ba88183b946cc5f0e8c96b2e66e1c74a7e',1,'Unknownm5::unit::vl53l0x'],['../unit___v_l53_l0_x_8hpp.html#a67692dfb19a5e62796ca834598b1dc79a88183b946cc5f0e8c96b2e66e1c74a7e',1,'Unknownm5::unit::vl53l0x'],['../unit___v_l53_l1_x_8hpp.html#afee946aad3ec5c4b572492ab1d750e29a88183b946cc5f0e8c96b2e66e1c74a7e',1,'Unknownm5::unit::vl53l1x']]],
+  ['unknown11_11',['Unknown11',['../unit___v_l53_l1_x_8hpp.html#a641b5e77e9e3ea840efb71cbb2552172a20d7824ddb9c3938cf0aaa6f8ad4db21',1,'m5::unit::vl53l1x']]],
+  ['unknown12_12',['Unknown12',['../unit___v_l53_l1_x_8hpp.html#a641b5e77e9e3ea840efb71cbb2552172aecefa5080ae765056ba0aa2b7e049f07',1,'m5::unit::vl53l1x']]],
+  ['unknown255_13',['Unknown255',['../unit___v_l53_l1_x_8hpp.html#a641b5e77e9e3ea840efb71cbb2552172a30e18c0831a82d5d8041820425b1ea43',1,'m5::unit::vl53l1x']]],
+  ['unknown6_14',['Unknown6',['../unit___v_l53_l1_x_8hpp.html#a641b5e77e9e3ea840efb71cbb2552172a02ea1a152064e08f0b4d73ac678fd5ec',1,'m5::unit::vl53l1x']]],
+  ['unknown8_15',['Unknown8',['../unit___v_l53_l1_x_8hpp.html#a641b5e77e9e3ea840efb71cbb2552172a1441440508bb5bf1a9a852dcba5ad59a',1,'m5::unit::vl53l1x']]],
+  ['update_16',['update',['../classm5_1_1unit_1_1_unit_v_l53_l0_x.html#aac10f6e529b74efd9f1d366fbafe78e4',1,'m5::unit::UnitVL53L0X::update()'],['../classm5_1_1unit_1_1_unit_v_l53_l1_x.html#a221b828cfab8a55c86a5898f3ca12c0d',1,'m5::unit::UnitVL53L1X::update()']]]
 ];

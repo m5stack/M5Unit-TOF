@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">M5Unit-TOF<span id="projectnumber">&#160;0.2.1 git rev:ffeb3c9</span>
+   <div id="projectname">M5Unit-TOF<span id="projectnumber">&#160;0.3.0 git rev:9de70e8</span>
    </div>
   </td>
  </tr>
@@ -128,9 +128,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1ee92026fb2fd98ae672a943338d0238" id="r_a1ee92026fb2fd98ae672a943338d0238"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1ee92026fb2fd98ae672a943338d0238">UnitVL53L0X</a> (const uint8_t addr=DEFAULT_ADDRESS)</td></tr>
 <tr class="memdesc:a1ee92026fb2fd98ae672a943338d0238"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor.  <br /></td></tr>
 <tr class="separator:a1ee92026fb2fd98ae672a943338d0238"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a237fd45c18183fb5f2217130b531f34b" id="r_a237fd45c18183fb5f2217130b531f34b"><td class="memItemLeft" align="right" valign="top"><a id="a237fd45c18183fb5f2217130b531f34b" name="a237fd45c18183fb5f2217130b531f34b"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () override</td></tr>
-<tr class="memdesc:a237fd45c18183fb5f2217130b531f34b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begin communication with the sensor. <br /></td></tr>
+<tr class="memitem:a237fd45c18183fb5f2217130b531f34b" id="r_a237fd45c18183fb5f2217130b531f34b"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a237fd45c18183fb5f2217130b531f34b">begin</a> () override</td></tr>
+<tr class="memdesc:a237fd45c18183fb5f2217130b531f34b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begin communication with the sensor.  <br /></td></tr>
 <tr class="separator:a237fd45c18183fb5f2217130b531f34b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac10f6e529b74efd9f1d366fbafe78e4" id="r_aac10f6e529b74efd9f1d366fbafe78e4"><td class="memItemLeft" align="right" valign="top"><a id="aac10f6e529b74efd9f1d366fbafe78e4" name="aac10f6e529b74efd9f1d366fbafe78e4"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (const bool force=false) override</td></tr>
@@ -182,12 +181,12 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>valid</b> () const</t
 <tr class="memitem:a53fd6f16bfd65bad0a5319d4f37fa72d" id="r_a53fd6f16bfd65bad0a5319d4f37fa72d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a53fd6f16bfd65bad0a5319d4f37fa72d">measureSingleshot</a> (<a class="el" href="structm5_1_1unit_1_1vl53l0x_1_1_data.html">vl53l0x::Data</a> &amp;data)</td></tr>
 <tr class="memdesc:a53fd6f16bfd65bad0a5319d4f37fa72d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Measurement single shot in the current settings.  <br /></td></tr>
 <tr class="separator:a53fd6f16bfd65bad0a5319d4f37fa72d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Signal range limit</div></td></tr>
+<tr><td colspan="2"><div class="groupHeader">Signal rate limit</div></td></tr>
 <tr class="memitem:a404ad5dd4db74a8970d8c1fb44d3736e" id="r_a404ad5dd4db74a8970d8c1fb44d3736e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a404ad5dd4db74a8970d8c1fb44d3736e">readSignalRateLimit</a> (float &amp;mcps)</td></tr>
-<tr class="memdesc:a404ad5dd4db74a8970d8c1fb44d3736e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the signal range limit.  <br /></td></tr>
+<tr class="memdesc:a404ad5dd4db74a8970d8c1fb44d3736e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the signal rate limit.  <br /></td></tr>
 <tr class="separator:a404ad5dd4db74a8970d8c1fb44d3736e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d85f3b51f5b2e67fd2e67f6e6878973" id="r_a1d85f3b51f5b2e67fd2e67f6e6878973"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1d85f3b51f5b2e67fd2e67f6e6878973">writeSignalRateLimit</a> (const float mcps)</td></tr>
-<tr class="memdesc:a1d85f3b51f5b2e67fd2e67f6e6878973"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the signal range limit.  <br /></td></tr>
+<tr class="memdesc:a1d85f3b51f5b2e67fd2e67f6e6878973"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the signal rate limit.  <br /></td></tr>
 <tr class="separator:a1d85f3b51f5b2e67fd2e67f6e6878973"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">I2C Address</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><dl class="section warning"><dt>Warning</dt><dd>Changing the I2C address persists until the device is power-cycled or soft-reset </dd></dl>
@@ -219,15 +218,21 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>read_measurement</b> 
 <tr class="memitem:ae7765fcca6dc8ac94eb4a5ea3abab24f" id="r_ae7765fcca6dc8ac94eb4a5ea3abab24f"><td class="memItemLeft" align="right" valign="top"><a id="ae7765fcca6dc8ac94eb4a5ea3abab24f" name="ae7765fcca6dc8ac94eb4a5ea3abab24f"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>write_default_values</b> ()</td></tr>
 <tr class="separator:ae7765fcca6dc8ac94eb4a5ea3abab24f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a136870c890b76fe0e43260a102506a36" id="r_a136870c890b76fe0e43260a102506a36"><td class="memItemLeft" align="right" valign="top"><a id="a136870c890b76fe0e43260a102506a36" name="a136870c890b76fe0e43260a102506a36"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>perform_single_ref_calibration</b> (bool VHV)</td></tr>
-<tr class="separator:a136870c890b76fe0e43260a102506a36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a059e779105349fd8b2dca56292681e8e" id="r_a059e779105349fd8b2dca56292681e8e"><td class="memItemLeft" align="right" valign="top"><a id="a059e779105349fd8b2dca56292681e8e" name="a059e779105349fd8b2dca56292681e8e"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>perform_single_ref_calibration</b> (const bool vhv)</td></tr>
+<tr class="separator:a059e779105349fd8b2dca56292681e8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a75519b62b34252d4644e7058a6c04a58" id="r_a75519b62b34252d4644e7058a6c04a58"><td class="memItemLeft" align="right" valign="top"><a id="a75519b62b34252d4644e7058a6c04a58" name="a75519b62b34252d4644e7058a6c04a58"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>write_vcsel_period_range</b> (const uint8_t pre_pclk, const uint8_t final_pclk)</td></tr>
 <tr class="separator:a75519b62b34252d4644e7058a6c04a58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8848501ab916dc662044766a9baa4ab7" id="r_a8848501ab916dc662044766a9baa4ab7"><td class="memItemLeft" align="right" valign="top"><a id="a8848501ab916dc662044766a9baa4ab7" name="a8848501ab916dc662044766a9baa4ab7"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>soft_reset</b> ()</td></tr>
 <tr class="separator:a8848501ab916dc662044766a9baa4ab7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86a285d90b75928d8bc2c92b17ba1112" id="r_a86a285d90b75928d8bc2c92b17ba1112"><td class="memItemLeft" align="right" valign="top"><a id="a86a285d90b75928d8bc2c92b17ba1112" name="a86a285d90b75928d8bc2c92b17ba1112"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>wait_model_id</b> (const bool resumed)</td></tr>
+<tr class="separator:a86a285d90b75928d8bc2c92b17ba1112"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6de2a651c387f974c8f6ac67c5cd93b" id="r_aa6de2a651c387f974c8f6ac67c5cd93b"><td class="memItemLeft" align="right" valign="top"><a id="aa6de2a651c387f974c8f6ac67c5cd93b" name="aa6de2a651c387f974c8f6ac67c5cd93b"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>restore_i2c_address</b> (const uint8_t addr)</td></tr>
+<tr class="separator:aa6de2a651c387f974c8f6ac67c5cd93b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11d5de786deb7958353096f6662403a7" id="r_a11d5de786deb7958353096f6662403a7"><td class="memItemLeft" align="right" valign="top"><a id="a11d5de786deb7958353096f6662403a7" name="a11d5de786deb7958353096f6662403a7"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>write_default_settings</b> ()</td></tr>
 <tr class="separator:a11d5de786deb7958353096f6662403a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -238,7 +243,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>write_default_setting
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:a9230dff9857709252b5c3c0a6e79b21d" id="r_a9230dff9857709252b5c3c0a6e79b21d"><td class="memItemLeft" align="right" valign="top"><a id="a9230dff9857709252b5c3c0a6e79b21d" name="a9230dff9857709252b5c3c0a6e79b21d"></a>
-<a class="el" href="unit___v_l53_l0_x_8hpp.html#a519d2071a932167500d19d94ffef076b">vl53l0x::Mode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>_mode</b> {vl53l0x::Mode::Unknown}</td></tr>
+<a class="el" href="unit___v_l53_l0_x_8hpp.html#a519d2071a932167500d19d94ffef076b">vl53l0x::Mode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>_mode</b> {<a class="el" href="unit___v_l53_l0_x_8hpp.html#a519d2071a932167500d19d94ffef076ba88183b946cc5f0e8c96b2e66e1c74a7e">vl53l0x::Mode::Unknown</a>}</td></tr>
 <tr class="separator:a9230dff9857709252b5c3c0a6e79b21d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c894169f9d7462cb5d302fa8b32e4a5" id="r_a1c894169f9d7462cb5d302fa8b32e4a5"><td class="memItemLeft" align="right" valign="top"><a id="a1c894169f9d7462cb5d302fa8b32e4a5" name="a1c894169f9d7462cb5d302fa8b32e4a5"></a>
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>_stop</b> {}</td></tr>
@@ -287,6 +292,34 @@ std::unique_ptr&lt; m5::container::CircularBuffer&lt; <a class="el" href="struct
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a237fd45c18183fb5f2217130b531f34b" name="a237fd45c18183fb5f2217130b531f34b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a237fd45c18183fb5f2217130b531f34b">&#9670;&#160;</a></span>begin()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool m5::unit::UnitVL53L0X::begin </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Begin communication with the sensor. </p>
+<p>Resets the sensor, then restores the I2C address in use if it was changed </p><dl class="section warning"><dt>Warning</dt><dd>The reset is resumed at the default address (0x29). Do not call it while another sensor still uses 0x29 </dd></dl>
+
+</div>
+</div>
 <a id="addf2fc09d94ef585055a3a9a14d2de6b" name="addf2fc09d94ef585055a3a9a14d2de6b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#addf2fc09d94ef585055a3a9a14d2de6b">&#9670;&#160;</a></span>changeI2CAddress()</h2>
 
@@ -411,10 +444,10 @@ Processing is blocked until results are returned </dd></dl>
       </table>
 </div><div class="memdoc">
 
-<p>Read the signal range limit. </p>
+<p>Read the signal rate limit. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">mcps</td><td>value </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">mcps</td><td>Signal rate limit (MCPS, 9.7 fixed point, 0.0 - 511.99) </td></tr>
   </table>
   </dd>
 </dl>
@@ -439,6 +472,10 @@ Processing is blocked until results are returned </dd></dl>
 
 <p>Software reset. </p>
 <dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The sensor reverts to the default I2C address (0x29), and so does this instance </dd>
+<dd>
+To reset while keeping the changed address, call <a class="el" href="#a237fd45c18183fb5f2217130b531f34b" title="Begin communication with the sensor.">begin()</a> instead </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>The reset is resumed at 0x29. Do not call it while another sensor still uses 0x29 </dd></dl>
 
 </div>
 </div>
@@ -573,10 +610,10 @@ Processing is blocked until results are returned </dd></dl>
       </table>
 </div><div class="memdoc">
 
-<p>Write the signal range limit. </p>
+<p>Write the signal rate limit. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">mcps</td><td>value </td></tr>
+    <tr><td class="paramname">mcps</td><td>Signal rate limit (MCPS, 9.7 fixed point, 0.0 - 511.99) </td></tr>
   </table>
   </dd>
 </dl>
